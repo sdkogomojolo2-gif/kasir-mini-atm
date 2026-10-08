@@ -1,0 +1,12 @@
+{
+  "projectId": "kasir-mini-atm",
+  "appId": "1:1055880338253:web:28c344f15af27a6bed3504",
+  "apiKey": "AIzaSyApZ9y1D0RiXkSdk-qAEHIoQkZUBli35iY",
+  "authDomain": "kasir-mini-atm.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "kasir-mini-atm.firebasestorage.app",
+  "messagingSenderId": "1055880338253",
+  "measurementId": "",
+  "oAuthClientId": "",
+  "recaptchaSiteKey": ""
+}

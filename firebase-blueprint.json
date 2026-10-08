@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Catalog item in the grocery store inventory",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "barcode": { "type": "string" },
+        "category": { "type": "string" },
+        "unit": { "type": "string" },
+        "costPrice": { "type": "number" },
+        "sellingPrice": { "type": "number" },
+        "stock": { "type": "number" },
+        "minStock": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "costPrice", "sellingPrice", "stock"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Sales transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "date": { "type": "string" },
+        "cashierName": { "type": "string" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "grandTotal": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "invoiceNumber", "date", "grandTotal", "paymentMethod", "status"]
+    },
+    "CustomerDebt": {
+      "title": "CustomerDebt",
+      "description": "Debt and credit record for regular customers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "totalDebt": { "type": "number" },
+        "dueDate": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "customerName", "totalDebt"]
+    },
+    "Store": {
+      "title": "Store",
+      "description": "Store configuration and active shift summary",
+      "type": "object",
+      "properties": {
+        "settings": { "type": "object" },
+        "activeShift": { "type": "object" },
+        "users": { "type": "array" },
+        "updatedAtISO": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/stores/{storeId}": {
+      "schema": "Store",
+      "description": "Main store configuration and metadata"
+    },
+    "/stores/{storeId}/products/{productId}": {
+      "schema": "Product",
+      "description": "Inventory product items"
+    },
+    "/stores/{storeId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Customer purchase receipts"
+    },
+    "/stores/{storeId}/debts/{debtId}": {
+      "schema": "CustomerDebt",
+      "description": "Customer credit/kasbon ledgers"
+    }
+  }
+}

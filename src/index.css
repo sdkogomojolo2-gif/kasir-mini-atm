@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: #09090b;
+  }
+
+  body {
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: #09090b;
+  }
+
+  .dark body,
+  .dark {
+    color: #f4f4f5;
+  }
+
+  /* High-contrast crisp text for form controls */
+  input, select, textarea {
+    color: #09090b;
+  }
+
+  .dark input,
+  .dark select,
+  .dark textarea {
+    color: #f4f4f5;
+  }
+
+  /* Yellow / Amber buttons always have sharp bold black text */
+  .bg-amber-500,
+  .bg-amber-400 {
+    color: #09090b !important;
+  }
+
+  .font-mono,
+  .font-numeric {
+    font-family: 'JetBrains Mono', monospace;
+    font-feature-settings: 'tnum' on, 'zero' on;
+  }
+}
+
+/* Minimalist High-Contrast Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(113, 113, 122, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(113, 113, 122, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(161, 161, 170, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.4);
+}
+
+/* Minimalist Clean Grid Background Pattern */
+.bg-grid-slate-pattern {
+  background-size: 28px 28px;
+  background-image: 
+    linear-gradient(to right, rgba(24, 24, 27, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(24, 24, 27, 0.04) 1px, transparent 1px);
+}
+
+.dark .bg-grid-slate-pattern {
+  background-size: 28px 28px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+/* Anti-glare High Contrast Selection */
+::selection {
+  background-color: #f59e0b;
+  color: #09090b;
+}

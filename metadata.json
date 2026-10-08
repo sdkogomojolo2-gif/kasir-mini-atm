@@ -1,0 +1,10 @@
+{
+  "name": "Remix H-Kasir \u0026 Keungan",
+  "description": "Aplikasi kasir agen Mini ATM, BRILink, konter pulsa, PPOB, transfer bank, dan e-wallet dengan dukungan multi-cabang, rekap kas laci vs saldo bank, cetak struk thermal, dan kelola mandiri offline-first.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
