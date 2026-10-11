@@ -40,6 +40,7 @@ import {
   Transaction,
   StoreBranch,
   ServiceType,
+  PaymentMethod,
 } from '../types';
 import { formatRupiah } from '../services/export';
 import { sound } from '../services/sound';
@@ -51,12 +52,20 @@ import { QuickFeeCalculatorModal } from './QuickFeeCalculatorModal';
 
 const CATEGORIES: ('ALL' | ProductCategory)[] = [
   'ALL',
-  'Layanan Mini ATM',
+  // Digital / Pencatatan HP
   'Pulsa & Paket Data',
+  'Layanan Mini ATM',
   'Top Up E-Wallet',
   'Token & Listrik PLN',
   'Tagihan PPOB & BPJS',
-  'Kartu Perdana & Voucher',
+  // Penjualan Fisik Konter HP
+  'Cas & Charger',
+  'Voucher Fisik',
+  'Casing & Tempered Glass',
+  'Kabel Data',
+  'Flashdisk & Memori',
+  'Handphone & Audio',
+  'Kartu Perdana',
   'Aksesoris Handphone',
 ];
 
@@ -66,9 +75,34 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Top Up E-Wallet': '👛',
   'Token & Listrik PLN': '⚡',
   'Tagihan PPOB & BPJS': '🧾',
-  'Kartu Perdana & Voucher': '🪪',
+  'Cas & Charger': '🔌',
+  'Voucher Fisik': '🎟️',
+  'Casing & Tempered Glass': '🛡️',
+  'Kabel Data': '🔌',
+  'Flashdisk & Memori': '💾',
+  'Handphone & Audio': '📲',
+  'Kartu Perdana': '🪪',
   'Aksesoris Handphone': '🎧',
 };
+
+const DIGITAL_CATEGORIES = [
+  'Pulsa & Paket Data',
+  'Layanan Mini ATM',
+  'Top Up E-Wallet',
+  'Token & Listrik PLN',
+  'Tagihan PPOB & BPJS',
+];
+
+const PHYSICAL_CATEGORIES = [
+  'Cas & Charger',
+  'Voucher Fisik',
+  'Casing & Tempered Glass',
+  'Kabel Data',
+  'Flashdisk & Memori',
+  'Handphone & Audio',
+  'Kartu Perdana',
+  'Aksesoris Handphone',
+];
 
 interface CashierViewProps {
   products: Product[];
@@ -93,6 +127,7 @@ interface CashierViewProps {
       referenceId?: string;
     }
   ) => void;
+  initialCategoryGroup?: 'ALL' | 'DIGITAL' | 'FISIK';
   darkMode: boolean;
 }
 
@@ -110,6 +145,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
   branches = [],
   onSelectBranch,
   onAdjustBranchBalances,
+  initialCategoryGroup,
   darkMode,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | ProductCategory>('ALL');
@@ -126,9 +162,21 @@ export const CashierView: React.FC<CashierViewProps> = ({
   const [isMiniATMModalOpen, setIsMiniATMModalOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [miniATMInitialService, setMiniATMInitialService] = useState<ServiceType>('TARIK_TUNAI');
+  const [miniATMPresetProvider, setMiniATMPresetProvider] = useState<string | undefined>(undefined);
+  const [miniATMPresetNominal, setMiniATMPresetNominal] = useState<number | undefined>(undefined);
+  const [selectedPulsaOperator, setSelectedPulsaOperator] = useState<string>('ALL');
+  const [categoryGroup, setCategoryGroup] = useState<'ALL' | 'DIGITAL' | 'FISIK'>(initialCategoryGroup || 'ALL');
 
-  const handleOpenMiniATM = (svc: ServiceType) => {
+  useEffect(() => {
+    if (initialCategoryGroup) {
+      setCategoryGroup(initialCategoryGroup);
+    }
+  }, [initialCategoryGroup]);
+
+  const handleOpenMiniATM = (svc: ServiceType, provider?: string, nominal?: number) => {
     setMiniATMInitialService(svc);
+    setMiniATMPresetProvider(provider);
+    setMiniATMPresetNominal(nominal);
     setIsMiniATMModalOpen(true);
     sound.playBeep(750, 0.04);
   };
@@ -174,20 +222,47 @@ export const CashierView: React.FC<CashierViewProps> = ({
     setSelectedCartIds([]);
   };
 
-  // Filter products by category and query
+  // Filter products by group mode (from sidebar navigation) and search query
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (!p.isActive) return false;
-      const matchCat = selectedCategory === 'ALL' || p.category === selectedCategory;
+
+      // Group Filter from Sidebar ("Pulsa & Layanan HP" vs "Barang Konter")
+      if (categoryGroup === 'DIGITAL') {
+        const isDigital =
+          (p.serviceType && p.serviceType !== 'PRODUK_FISIK') ||
+          DIGITAL_CATEGORIES.includes(p.category) ||
+          p.category.toLowerCase().includes('pulsa') ||
+          p.category.toLowerCase().includes('paket') ||
+          p.category.toLowerCase().includes('atm') ||
+          p.category.toLowerCase().includes('wallet') ||
+          p.category.toLowerCase().includes('pln') ||
+          p.category.toLowerCase().includes('ppob');
+        if (!isDigital) return false;
+      } else if (categoryGroup === 'FISIK') {
+        const isDigital =
+          (p.serviceType && p.serviceType !== 'PRODUK_FISIK') ||
+          DIGITAL_CATEGORIES.includes(p.category) ||
+          p.category.toLowerCase().includes('pulsa') ||
+          p.category.toLowerCase().includes('paket') ||
+          p.category.toLowerCase().includes('atm') ||
+          p.category.toLowerCase().includes('wallet') ||
+          p.category.toLowerCase().includes('pln') ||
+          p.category.toLowerCase().includes('ppob');
+        if (isDigital) return false;
+      }
+
       const q = searchQuery.toLowerCase().trim();
-      const matchQuery =
-        !q ||
+      if (!q) return true;
+
+      return (
         p.name.toLowerCase().includes(q) ||
         p.barcode.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q);
-      return matchCat && matchQuery;
+        p.category.toLowerCase().includes(q) ||
+        (p.provider && p.provider.toLowerCase().includes(q))
+      );
     });
-  }, [products, selectedCategory, searchQuery]);
+  }, [products, categoryGroup, searchQuery]);
 
   // Fast add product to cart
   const handleAddToCart = (product: Product, qtyToAdd = 1) => {
@@ -229,6 +304,87 @@ export const CashierView: React.FC<CashierViewProps> = ({
         ];
       }
     });
+  };
+
+  // 1-Click Quick Sell for Physical Goods (Catat Penjualan Fisik Kilat tanpa ribet keranjang)
+  const handleQuickSellProduct = (
+    product: Product,
+    paymentMethod: PaymentMethod = 'TUNAI'
+  ) => {
+    if (product.stock <= 0) {
+      sound.playError();
+      alert(`Stok ${product.name} saat ini habis!`);
+      return;
+    }
+
+    sound.playSuccess();
+    const profit = Math.max(0, product.sellPrice - product.buyPrice);
+    const now = new Date();
+    const invoiceNumber = `INV-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+
+    const trx: Transaction = {
+      id: `trx-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      invoiceNumber,
+      referenceNumber: `KONTER-${Date.now().toString().slice(-6)}`,
+      date: now.toISOString(),
+      cashierId: currentUser?.id || 'cashier-1',
+      cashierName: currentUser?.name || 'Kasir Konter',
+      branchId: activeBranch?.id || 'branch-pusat',
+      branchName: activeBranch?.name || 'Konter Pusat',
+      items: [
+        {
+          productId: product.id,
+          productName: product.name,
+          barcode: product.barcode,
+          category: product.category,
+          buyPrice: product.buyPrice,
+          sellPrice: product.sellPrice,
+          quantity: 1,
+          unit: product.unit,
+          discount: 0,
+          subtotal: product.sellPrice,
+          profit: profit,
+          serviceType: product.serviceType || 'PRODUK_FISIK',
+        },
+      ],
+      totalQuantity: 1,
+      subtotal: product.sellPrice,
+      discount: 0,
+      grandTotal: product.sellPrice,
+      totalCost: product.buyPrice,
+      totalProfit: profit,
+      paymentMethod,
+      cashAmount: paymentMethod === 'TUNAI' ? product.sellPrice : undefined,
+      changeAmount: 0,
+      notes: `Penjualan Kilat: ${product.name}`,
+      status: 'COMPLETED',
+    };
+
+    // Adjust branch balances
+    onAdjustBranchBalances?.(
+      activeBranch?.id || 'branch-pusat',
+      {
+        cashChange: paymentMethod === 'TUNAI' ? product.sellPrice : 0,
+        bankChange: paymentMethod === 'QRIS' ? product.sellPrice : 0,
+      },
+      {
+        category: 'TRANSAKSI',
+        description: `Penjualan Kilat: ${product.name}`,
+        cashierName: currentUser?.name || 'Kasir Konter',
+        referenceId: invoiceNumber,
+      }
+    );
+
+    // Save stock reduction if product is updated
+    if (onSaveProduct) {
+      onSaveProduct({
+        ...product,
+        stock: Math.max(0, product.stock - 1),
+        updatedAt: now.toISOString(),
+      });
+    }
+
+    onTransactionCompleted(trx);
   };
 
   const handleUpdateQty = (productId: string, delta: number) => {
@@ -503,209 +659,8 @@ export const CashierView: React.FC<CashierViewProps> = ({
         </div>
       )}
 
-      {/* 1. Branch HUD & Real-Time Cash/Bank Balances Bar */}
-      {activeBranch && (
-        <div className="p-3 sm:p-3.5 rounded-2xl bg-zinc-950 text-white border border-zinc-800 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-lg shrink-0">
-              🏦
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-mono text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-amber-400 border border-zinc-700">
-                  {activeBranch.code}
-                </span>
-                <span className="font-extrabold text-xs sm:text-sm text-white">
-                  {activeBranch.name}
-                </span>
-                {currentUser?.role === 'KASIR' ? (
-                  <span className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                    🔒 Cabang Anda
-                  </span>
-                ) : (
-                  branches && branches.length > 1 && onSelectBranch && (
-                    <select
-                      value={activeBranch.id}
-                      onChange={(e) => onSelectBranch(e.target.value)}
-                      className="ml-1 text-[11px] font-bold bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-0.5 text-zinc-300 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
-                      title="Ganti Cabang Kasir (Mode Admin)"
-                    >
-                      {branches.map((b) => (
-                        <option key={b.id} value={b.id}>
-                          Ganti: {b.name}
-                        </option>
-                      ))}
-                    </select>
-                  )
-                )}
-              </div>
-              <p className="text-[10px] text-zinc-400 truncate max-w-md mt-0.5">
-                {activeBranch.address || 'Agen Mini ATM, Transfer Bank & Konter Pulsa'}
-              </p>
-            </div>
-          </div>
-
-          {/* Real-time Balances HUD */}
-          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 md:pb-0 shrink-0">
-            <div className="px-2.5 py-1.5 rounded-xl bg-zinc-900/90 border border-emerald-500/30 flex items-center gap-2">
-              <span className="text-sm">💵</span>
-              <div>
-                <div className="text-[9px] font-bold uppercase text-zinc-400 tracking-wider">Kas Laci</div>
-                <div className="text-xs font-mono font-black text-emerald-400">{formatRupiah(activeBranch.cashDrawerBalance || 0)}</div>
-              </div>
-            </div>
-
-            <div className="px-2.5 py-1.5 rounded-xl bg-zinc-900/90 border border-blue-500/30 flex items-center gap-2">
-              <span className="text-sm">🏦</span>
-              <div>
-                <div className="text-[9px] font-bold uppercase text-zinc-400 tracking-wider">Saldo Bank</div>
-                <div className="text-xs font-mono font-black text-blue-400">{formatRupiah(activeBranch.bankBalance || 0)}</div>
-              </div>
-            </div>
-
-            <div className="px-2.5 py-1.5 rounded-xl bg-zinc-900/90 border border-purple-500/30 flex items-center gap-2">
-              <span className="text-sm">📱</span>
-              <div>
-                <div className="text-[9px] font-bold uppercase text-zinc-400 tracking-wider">Saldo Pulsa</div>
-                <div className="text-xs font-mono font-black text-purple-400">{formatRupiah(activeBranch.digiposBalance || 0)}</div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setIsCalculatorOpen(true)}
-              className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-zinc-950 font-black text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95 shrink-0"
-              title="Kalkulator Fee & Potong Saldo"
-            >
-              <Calculator className="w-3.5 h-3.5" />
-              <span>Kalkulator Fee</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Low Balance Alert Strip */}
-      {activeBranch &&
-        ((activeBranch.cashDrawerBalance || 0) < 300000 ||
-          (activeBranch.bankBalance || 0) < 500000 ||
-          (activeBranch.digiposBalance || 0) < 200000) && (
-          <div className="px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-300 text-xs font-bold flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm shrink-0">⚠️</span>
-              <span>
-                <strong>Perhatian Saldo Menipis:</strong>{' '}
-                {(activeBranch.cashDrawerBalance || 0) < 300000 && 'Kas Tunai Laci Rendah. '}
-                {(activeBranch.bankBalance || 0) < 500000 && 'Saldo Rekening/EDC Rendah. '}
-                {(activeBranch.digiposBalance || 0) < 200000 && 'Saldo Server Pulsa Rendah.'}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsCalculatorOpen(true)}
-              className="text-[11px] font-black underline cursor-pointer hover:text-amber-600 dark:hover:text-amber-200 shrink-0"
-            >
-              Simulasi Fee
-            </button>
-          </div>
-        )}
-
-      {/* 2. Mini ATM & PPOB Quick Action Launch Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-        <button
-          type="button"
-          onClick={() => handleOpenMiniATM('TARIK_TUNAI')}
-          className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 text-left transition-all shadow-2xs group cursor-pointer active:scale-95"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-base">💳</span>
-            <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">EDC</span>
-          </div>
-          <div className="font-black text-xs text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-500 transition-colors">Tarik Tunai</div>
-          <div className="text-[10px] text-zinc-400 truncate">Semua Bank</div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleOpenMiniATM('SETOR_TUNAI')}
-          className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-blue-500 text-left transition-all shadow-2xs group cursor-pointer active:scale-95"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-base">📥</span>
-            <span className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">Setor</span>
-          </div>
-          <div className="font-black text-xs text-zinc-900 dark:text-zinc-100 group-hover:text-blue-500 transition-colors">Setor Tunai</div>
-          <div className="text-[10px] text-zinc-400 truncate">BRI/BCA/Mandiri</div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleOpenMiniATM('TRANSFER_BANK')}
-          className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 text-left transition-all shadow-2xs group cursor-pointer active:scale-95"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-base">🔁</span>
-            <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">Realtime</span>
-          </div>
-          <div className="font-black text-xs text-zinc-900 dark:text-zinc-100 group-hover:text-amber-500 transition-colors">Transfer Bank</div>
-          <div className="text-[10px] text-zinc-400 truncate">Antar Bank RI</div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleOpenMiniATM('PULSA')}
-          className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-purple-500 text-left transition-all shadow-2xs group cursor-pointer active:scale-95"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-base">📱</span>
-            <span className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">All Op</span>
-          </div>
-          <div className="font-black text-xs text-zinc-900 dark:text-zinc-100 group-hover:text-purple-500 transition-colors">Pulsa & Kuota</div>
-          <div className="text-[10px] text-zinc-400 truncate">Tsel/Isat/XL/Tri</div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleOpenMiniATM('TOPUP_EWALLET')}
-          className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-cyan-500 text-left transition-all shadow-2xs group cursor-pointer active:scale-95"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-base">👛</span>
-            <span className="text-[10px] font-mono font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded">Dompet</span>
-          </div>
-          <div className="font-black text-xs text-zinc-900 dark:text-zinc-100 group-hover:text-cyan-500 transition-colors">Top Up E-Wallet</div>
-          <div className="text-[10px] text-zinc-400 truncate">DANA/Gopay/OVO</div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleOpenMiniATM('TOKEN_PLN')}
-          className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-yellow-500 text-left transition-all shadow-2xs group cursor-pointer active:scale-95"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-base">⚡</span>
-            <span className="text-[10px] font-mono font-bold text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded">20 Digit</span>
-          </div>
-          <div className="font-black text-xs text-zinc-900 dark:text-zinc-100 group-hover:text-yellow-500 transition-colors">Token Listrik</div>
-          <div className="text-[10px] text-zinc-400 truncate">PLN Prabayar</div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleOpenMiniATM('TAGIHAN_PPOB')}
-          className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-rose-500 text-left transition-all shadow-2xs group cursor-pointer active:scale-95"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-base">🧾</span>
-            <span className="text-[10px] font-mono font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">PPOB</span>
-          </div>
-          <div className="font-black text-xs text-zinc-900 dark:text-zinc-100 group-hover:text-rose-500 transition-colors">Bayar Tagihan</div>
-          <div className="text-[10px] text-zinc-400 truncate">BPJS/PDAM/Wifi</div>
-        </button>
-      </div>
-
-      {/* Top Search & Scanner Action Bar */}
-      <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
-        {/* Search Input */}
+      {/* Top Product Search Bar */}
+      <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input
@@ -715,35 +670,35 @@ export const CashierView: React.FC<CashierViewProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            placeholder="Cari nama barang atau scan barcode kemasan... (Tekan F2)"
-            className="w-full pl-10 pr-16 py-2.5 rounded-xl border text-xs sm:text-sm font-medium bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-xs"
+            placeholder={
+              categoryGroup === 'DIGITAL'
+                ? 'Cari pulsa, kuota paket data, token PLN, e-wallet... (Tekan F2)'
+                : categoryGroup === 'FISIK'
+                ? 'Cari cas, charger, casing, kabel data, aksesoris... (Tekan F2)'
+                : 'Cari nama barang atau scan barcode kemasan... (Tekan F2)'
+            }
+            className="w-full pl-10 pr-20 py-2.5 rounded-xl border text-xs sm:text-sm font-medium bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-xs"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-9 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 cursor-pointer"
+              title="Hapus pencarian"
+            >
+              ✕
+            </button>
+          )}
           <kbd className="hidden sm:inline-block absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded bg-zinc-50 dark:bg-zinc-800">
             F2
           </kbd>
         </div>
 
-        {/* Scan Camera Button */}
-        <button
-          id="btn-pos-open-scanner"
-          type="button"
-          onClick={() => setIsScannerOpen(true)}
-          className="px-4 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-800 text-white hover:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-700 text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer shrink-0"
-          title="Buka Kamera Barcode Scanner (F4)"
-        >
-          <Scan className="w-4 h-4 text-amber-400" />
-          <span>Pindai Kamera</span>
-          <kbd className="hidden md:inline px-1 text-[10px] font-mono text-zinc-400 border border-zinc-700 rounded">
-            F4
-          </kbd>
-        </button>
-
-        {/* Held Carts / Antrian Indicator */}
         {heldCarts.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto shrink-0">
             <span className="text-[11px] font-bold text-amber-500 flex items-center gap-1 shrink-0 font-mono">
               <PauseCircle className="w-3.5 h-3.5" />
-              <span>Antrian:</span>
+              <span className="hidden sm:inline">Antrian:</span>
             </span>
             {heldCarts.map((h) => (
               <button
@@ -759,41 +714,31 @@ export const CashierView: React.FC<CashierViewProps> = ({
         )}
       </div>
 
-      {/* Category Segmented Filter Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-        {CATEGORIES.map((cat) => {
-          const isSelected = selectedCategory === cat;
-          const icon = cat === 'ALL' ? '🌟' : CATEGORY_ICONS[cat] || '📦';
-          return (
-            <button
-              key={cat}
-              id={`cat-chip-${cat.replace(/\s+/g, '-')}`}
-              type="button"
-              onClick={() => {
-                sound.playBeep(600, 0.03);
-                setSelectedCategory(cat);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
-                isSelected
-                  ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-sm'
-                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-              }`}
-            >
-              <span>{icon}</span>{' '}
-              <span>{cat === 'ALL' ? 'Semua Kategori' : cat}</span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* Main Split Screen: Left Catalog (7-8 cols), Right Cart (4-5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Side: Product Grid */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-2">
           <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-            <span className="font-bold uppercase tracking-wider font-mono text-[11px]">
-              Katalog Produk ({filteredProducts.length})
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold uppercase tracking-wider font-mono text-[11px] text-zinc-800 dark:text-zinc-200">
+                {categoryGroup === 'DIGITAL'
+                  ? '📱 Pulsa & Layanan HP'
+                  : categoryGroup === 'FISIK'
+                  ? '🔌 Barang Konter (Fisik)'
+                  : '🌟 Semua Katalog Produk'}
+                <span className="ml-1.5 font-normal text-zinc-400 font-mono">({filteredProducts.length})</span>
+              </span>
+              {categoryGroup !== 'ALL' && (
+                <button
+                  type="button"
+                  onClick={() => setCategoryGroup('ALL')}
+                  className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-amber-500 font-bold cursor-pointer transition-colors"
+                  title="Lihat semua produk tanpa filter"
+                >
+                  Semua Produk ✕
+                </button>
+              )}
+            </div>
             <span className="hidden sm:inline text-[11px]">
               Klik barang untuk menambah ke struk belanja
             </span>
@@ -831,7 +776,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 max-h-[calc(100vh-250px)] overflow-y-auto pr-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 max-h-[calc(100vh-170px)] overflow-y-auto pr-1 pb-12">
               {filteredProducts.map((product) => {
                 const inCartItem = cart.find((i) => i.product.id === product.id);
               const isLowStock = product.stock <= product.minStock;
@@ -839,22 +784,34 @@ export const CashierView: React.FC<CashierViewProps> = ({
               const icon = CATEGORY_ICONS[product.category] || '📦';
 
               return (
-                <button
+                <div
                   key={product.id}
                   id={`btn-product-card-${product.id}`}
-                  type="button"
+                  role="button"
+                  tabIndex={isOutOfStock ? -1 : 0}
                   onClick={() => {
+                    if (isOutOfStock) return;
                     if (product.serviceType && product.serviceType !== 'PRODUK_FISIK') {
-                      handleOpenMiniATM(product.serviceType);
+                      handleOpenMiniATM(product.serviceType, product.provider, product.nominal);
                     } else {
                       handleAddToCart(product, 1);
                     }
                   }}
-                  disabled={isOutOfStock}
-                  className={`group text-left p-3 rounded-xl border transition-all duration-150 relative flex flex-col justify-between overflow-hidden cursor-pointer shadow-2xs ${
+                  onKeyDown={(e) => {
+                    if (isOutOfStock) return;
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (product.serviceType && product.serviceType !== 'PRODUK_FISIK') {
+                        handleOpenMiniATM(product.serviceType, product.provider, product.nominal);
+                      } else {
+                        handleAddToCart(product, 1);
+                      }
+                    }
+                  }}
+                  className={`group text-left p-3 rounded-xl border transition-all duration-150 relative flex flex-col justify-between overflow-hidden shadow-2xs select-none ${
                     isOutOfStock
                       ? 'opacity-40 grayscale cursor-not-allowed bg-zinc-100 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800'
-                      : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-amber-500/60 dark:hover:border-amber-400 active:scale-[0.98]'
+                      : 'cursor-pointer bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-amber-500/60 dark:hover:border-amber-400 active:scale-[0.98]'
                   }`}
                 >
                   {/* Cart badge if item is in cart */}
@@ -902,20 +859,37 @@ export const CashierView: React.FC<CashierViewProps> = ({
                   </div>
 
                   {/* Price & Add Footer */}
-                  <div className="pt-2.5 mt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex items-end justify-between">
-                    <div>
-                      <div className="text-[10px] text-zinc-400 font-mono">
+                  <div className="pt-2.5 mt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-1">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[10px] text-zinc-400 font-mono truncate">
                         #{product.barcode.slice(-6)}
                       </div>
-                      <div className="font-black text-sm sm:text-base text-zinc-900 dark:text-zinc-100 font-numeric font-mono">
+                      <div className="font-black text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 font-numeric font-mono truncate">
                         {formatRupiah(product.sellPrice)}
                       </div>
                     </div>
-                    <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-zinc-950 group-hover:border-amber-500 transition-colors">
-                      <Plus className="w-4 h-4" />
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {(!product.serviceType || product.serviceType === 'PRODUK_FISIK') && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickSellProduct(product, 'TUNAI');
+                          }}
+                          title="Jual Kilat 1x (Langsung Catat Tunai Selesai)"
+                          className="px-2 py-1 rounded-lg text-[10px] font-black bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white border border-emerald-500/20 transition-all flex items-center gap-0.5 cursor-pointer active:scale-95 shadow-2xs"
+                        >
+                          <span>⚡</span>
+                          <span className="hidden sm:inline">Jual</span>
+                        </button>
+                      )}
+                      <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-zinc-950 group-hover:border-amber-500 transition-colors">
+                        <Plus className="w-3.5 h-3.5" />
+                      </div>
                     </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -1521,13 +1495,21 @@ export const CashierView: React.FC<CashierViewProps> = ({
       {isMiniATMModalOpen && activeBranch && (
         <MiniATMTransactionModal
           isOpen={isMiniATMModalOpen}
-          onClose={() => setIsMiniATMModalOpen(false)}
+          onClose={() => {
+            setIsMiniATMModalOpen(false);
+            setMiniATMPresetProvider(undefined);
+            setMiniATMPresetNominal(undefined);
+          }}
           activeBranch={activeBranch}
           settings={settings}
           currentUser={currentUser}
           initialService={miniATMInitialService}
+          initialProvider={miniATMPresetProvider}
+          initialNominal={miniATMPresetNominal}
           onCompleteTransaction={(trx, balanceChanges, mutationMeta) => {
             setIsMiniATMModalOpen(false);
+            setMiniATMPresetProvider(undefined);
+            setMiniATMPresetNominal(undefined);
             onAdjustBranchBalances?.(activeBranch.id, balanceChanges, {
               category: mutationMeta.category,
               description: mutationMeta.description,

@@ -45,6 +45,7 @@ interface DashboardViewProps {
   onOpenShiftModal: () => void;
   onViewReceipt: (trx: Transaction) => void;
   currentUser?: CashierUser | null;
+  onSelectCashierGroup?: (group: 'ALL' | 'DIGITAL' | 'FISIK') => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -61,7 +62,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenShiftModal,
   onViewReceipt,
   currentUser,
+  onSelectCashierGroup,
 }) => {
+  const [dashboardMode, setDashboardMode] = useState<'SIMPLE' | 'DETAILED'>('SIMPLE');
   const isCashier = currentUser?.role === 'KASIR';
   const cashierBranchId = isCashier
     ? (currentUser?.branchId || activeBranchId || branches[0]?.id || 'branch-cabang-2')
@@ -231,32 +234,42 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Branch Switcher & Quick Actions */}
+        {/* Branch Switcher & Mode Switcher */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {!isCashier && branches.length > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs">
-              <span className="text-xs">🏢</span>
-              <select
-                value={selectedBranchFilter}
-                onChange={(e) => setSelectedBranchFilter(e.target.value)}
-                className="bg-transparent font-black text-xs text-zinc-950 dark:text-zinc-100 focus:outline-none cursor-pointer"
-                title="Pilih Cabang (Mode Admin)"
-              >
-                <option value="ALL" className="bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 font-black">
-                  Semua Cabang ({branches.length} Cabang Konsolidasi)
-                </option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id} className="bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100">
-                    {b.name} ({b.code})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          {/* Mode Switcher: Ringkas vs Lengkap */}
+          <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700">
+            <button
+              type="button"
+              onClick={() => setDashboardMode('SIMPLE')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                dashboardMode === 'SIMPLE'
+                  ? 'bg-amber-500 text-zinc-950 shadow-xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+              title="Tampilan ringkas & ramah pemula / kasir konter"
+            >
+              🌱 Mode Kasir (Ringkas)
+            </button>
+            <button
+              type="button"
+              onClick={() => setDashboardMode('DETAILED')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                dashboardMode === 'DETAILED'
+                  ? 'bg-amber-500 text-zinc-950 shadow-xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+              title="Tampilan lengkap analisa omzet & seluruh cabang"
+            >
+              📊 Mode Analisa (Lengkap)
+            </button>
+          </div>
 
           <button
             type="button"
-            onClick={() => onNavigate('cashier')}
+            onClick={() => {
+              onSelectCashierGroup?.('ALL');
+              onNavigate('cashier');
+            }}
             className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
           >
             <ShoppingCart className="w-3.5 h-3.5" />
@@ -278,7 +291,249 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Main KPI Stat Cards: Kas Laci, Saldo Bank, Saldo Pulsa, Laba Admin */}
+      {/* JIKA MODE RINGKAS (Mencegah Orang Awam / Pemula / Penjaga Konter Pusing) */}
+      {dashboardMode === 'SIMPLE' ? (
+        <div className="space-y-4">
+          {/* A. Hero Card Langsung Mulai Transaksi */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-zinc-900/30 border border-amber-500/30 shadow-xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs mb-2">
+                  <span>✨ Siap Melayani Pembeli Hari Ini</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-zinc-950 dark:text-white">
+                  Mulai Catat Transaksi Konter
+                </h3>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 max-w-xl">
+                  Tekan tombol besar di samping untuk langsung melayani pelanggan pulsa, transfer mini ATM, atau pembelian barang fisik seperti cas &amp; aksesoris.
+                </p>
+              </div>
+
+              {/* Tombol Utama Raksasa - Jelas & Tidak Membingungkan */}
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectCashierGroup?.('ALL');
+                  onNavigate('cashier');
+                }}
+                className="px-6 py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-98 text-zinc-950 font-black text-sm sm:text-base shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2.5 transition-all cursor-pointer shrink-0"
+              >
+                <ShoppingCart className="w-5 h-5 text-zinc-950 stroke-[2.5]" />
+                <span>BUKA KASIR &amp; CATAT TRANSAKSI (F9)</span>
+              </button>
+            </div>
+
+            {/* Akses Cepat 4 Kategori Populer Konter */}
+            <div className="mt-4 pt-4 border-t border-amber-500/20 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectCashierGroup?.('DIGITAL');
+                  onNavigate('cashier');
+                }}
+                className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 text-left transition-all cursor-pointer group"
+              >
+                <div className="text-xl mb-1">📱</div>
+                <div className="font-black text-xs text-zinc-900 dark:text-white group-hover:text-amber-500">
+                  Pulsa &amp; Kuota Data
+                </div>
+                <div className="text-[10px] text-zinc-500">Telkomsel, IM3, XL, Tri</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectCashierGroup?.('DIGITAL');
+                  onNavigate('cashier');
+                }}
+                className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 text-left transition-all cursor-pointer group"
+              >
+                <div className="text-xl mb-1">🏧</div>
+                <div className="font-black text-xs text-zinc-900 dark:text-white group-hover:text-amber-500">
+                  Tarik / Transfer Bank
+                </div>
+                <div className="text-[10px] text-zinc-500">Semua Bank &amp; E-Wallet</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectCashierGroup?.('FISIK');
+                  onNavigate('cashier');
+                }}
+                className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 text-left transition-all cursor-pointer group"
+              >
+                <div className="text-xl mb-1">🔌</div>
+                <div className="font-black text-xs text-zinc-900 dark:text-white group-hover:text-amber-500">
+                  Cas &amp; Aksesoris HP
+                </div>
+                <div className="text-[10px] text-zinc-500">Cas, Casing, Kabel Data, dll</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectCashierGroup?.('DIGITAL');
+                  onNavigate('cashier');
+                }}
+                className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 text-left transition-all cursor-pointer group"
+              >
+                <div className="text-xl mb-1">⚡</div>
+                <div className="font-black text-xs text-zinc-900 dark:text-white group-hover:text-amber-500">
+                  Token Listrik &amp; Tagihan
+                </div>
+                <div className="text-[10px] text-zinc-500">PLN, BPJS, PDAM, dll</div>
+              </button>
+            </div>
+          </div>
+
+          {/* B. Hanya 3 Angka Ringkasan Penting (Uang Laci, Penjualan, Keuntungan) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            {/* 1. Kas Laci Tunai */}
+            <div
+              onClick={() => onNavigate('branches')}
+              className="p-4 sm:p-5 rounded-2xl border transition-all hover:border-emerald-500 cursor-pointer bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-2xs group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-mono">
+                    💵 Uang Tunai di Laci Kasir
+                  </p>
+                  <h3 className="text-2xl sm:text-3xl font-black mt-2 font-mono text-emerald-600 dark:text-emerald-400">
+                    {formatRupiah(totalCashAcross)}
+                  </h3>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1 group-hover:text-emerald-500">
+                    <span>Uang fisik wajib ada di laci saat ini →</span>
+                  </p>
+                </div>
+                <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xl shrink-0">
+                  💵
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Total Penjualan Hari Ini */}
+            <div
+              onClick={() => onNavigate('reports')}
+              className="p-4 sm:p-5 rounded-2xl border transition-all hover:border-blue-500 cursor-pointer bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-2xs group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-mono">
+                    🛍️ Penjualan Hari Ini
+                  </p>
+                  <h3 className="text-2xl sm:text-3xl font-black mt-2 font-mono text-blue-600 dark:text-blue-400">
+                    {formatRupiah(todayOmzet)}
+                  </h3>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1 group-hover:text-blue-500">
+                    <span>{todayTransactions.length} transaksi selesai hari ini →</span>
+                  </p>
+                </div>
+                <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center text-xl shrink-0">
+                  🛍️
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Keuntungan Bersih Hari Ini */}
+            <div
+              onClick={() => onNavigate('reports')}
+              className="p-4 sm:p-5 rounded-2xl border transition-all hover:border-amber-500 cursor-pointer bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/30 shadow-2xs group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider font-mono">
+                    💰 Laba / Keuntungan Bersih
+                  </p>
+                  <h3 className="text-2xl sm:text-3xl font-black mt-2 font-mono text-zinc-900 dark:text-zinc-100">
+                    +{formatRupiah(todayAdminProfit)}
+                  </h3>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1 group-hover:text-amber-500">
+                    <span>Dari selisih admin pulsa &amp; laba barang →</span>
+                  </p>
+                </div>
+                <div className="w-11 h-11 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center text-xl shrink-0 font-bold">
+                  💰
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* C. Transaksi Terakhir (Ringkas & Bersih) */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-extrabold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-amber-500" />
+                <span>Transaksi Terakhir (Struk &amp; Bukti Pembayaran)</span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => onNavigate('reports')}
+                className="text-xs font-bold text-amber-500 hover:underline cursor-pointer"
+              >
+                Lihat Semua Laporan →
+              </button>
+            </div>
+
+            {recentTransactions.length === 0 ? (
+              <div className="py-10 text-center text-zinc-400 text-xs">
+                Belum ada transaksi hari ini. Klik tombol <span className="font-bold text-amber-500">Mulai Transaksi</span> di atas untuk melayani pembeli pertama!
+              </div>
+            ) : (
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800/80">
+                {recentTransactions.map((trx) => (
+                  <div
+                    key={trx.id}
+                    onClick={() => onViewReceipt(trx)}
+                    className="py-3 flex items-center justify-between gap-3 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 px-2 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-base shrink-0">
+                        {trx.serviceType === 'TARIK_TUNAI'
+                          ? '💳'
+                          : trx.serviceType === 'SETOR_TUNAI'
+                          ? '📥'
+                          : trx.serviceType === 'TRANSFER_BANK'
+                          ? '🔁'
+                          : trx.serviceType === 'TOKEN_PLN'
+                          ? '⚡'
+                          : trx.serviceType === 'TOPUP_EWALLET'
+                          ? '👛'
+                          : trx.serviceType === 'PULSA' || trx.serviceType === 'PAKET_DATA'
+                          ? '📱'
+                          : '🧾'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-black text-xs text-zinc-900 dark:text-zinc-100 truncate">
+                          {trx.items[0]?.productName || 'Transaksi Kasir'}
+                        </div>
+                        <div className="text-[10px] text-zinc-400 flex items-center gap-1.5 font-mono">
+                          <span>#{trx.invoiceNumber}</span>
+                          <span>•</span>
+                          <span>{trx.branchName || 'Cabang'}</span>
+                          <span>•</span>
+                          <span>{formatDateIndo(trx.date).split(' ')[1]} {formatDateIndo(trx.date).split(' ')[2]}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <div className="font-mono font-black text-xs text-zinc-900 dark:text-zinc-100">
+                        {formatRupiah(trx.grandTotal)}
+                      </div>
+                      <div className="text-[10px] font-mono text-emerald-500 font-bold">
+                        +{formatRupiah(trx.totalProfit)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* JIKA MODE DETAIL / ANALISA LENGKAP */
+        <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* 1. Kas Laci Tunai */}
         <div
@@ -728,6 +983,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           )}
         </div>
       </div>
+        </div>
+      )}
     </div>
   );
 };

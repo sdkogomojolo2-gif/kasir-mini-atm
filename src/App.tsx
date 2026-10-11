@@ -50,6 +50,7 @@ export default function App() {
   // App UI State
   const [currentUser, setCurrentUser] = useState<CashierUser | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [cashierInitialGroup, setCashierInitialGroup] = useState<'ALL' | 'DIGITAL' | 'FISIK'>('ALL');
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -109,9 +110,29 @@ export default function App() {
   }, [loadDatabase]);
 
   // Real-time Cloud Synchronization (Firebase Firestore)
-  // Default is 100% OFFLINE STANDALONE - Cloud only runs if explicitly activated
+  // Default is 100% OFFLINE STANDALONE - Cloud only runs if explicitly activated or custom database connected
+  const [syncReloadTrigger, setSyncReloadTrigger] = useState(0);
+
   useEffect(() => {
-    if (!settings?.enableCloudSync) {
+    const handleFirebaseSwitched = () => {
+      setSyncReloadTrigger((prev) => prev + 1);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pos-firebase-switched', handleFirebaseSwitched);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('pos-firebase-switched', handleFirebaseSwitched);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const isSyncActive = Boolean(
+      settings?.enableCloudSync || settings?.cloudSyncMode === 'CUSTOM_FIREBASE'
+    );
+
+    if (!isSyncActive) {
       setCloudSyncStatus('OFFLINE');
       return;
     }
@@ -120,7 +141,7 @@ export default function App() {
 
     // 1. Initial Cloud Pull & Sync
     cloudSync
-      .pullFullStoreFromCloud(currentStoreId)
+      .pullFullStoreFromCloud(currentStoreId, settings)
       .then((cloudData) => {
         if (cloudData && (cloudData.products || cloudData.transactions)) {
           isSyncingFromCloudRef.current = true;
@@ -191,11 +212,12 @@ export default function App() {
           isSyncingFromCloudRef.current = false;
         }, 300);
       },
-      currentStoreId
+      currentStoreId,
+      settings
     );
 
     return () => unsub();
-  }, [settings?.storeId]);
+  }, [settings?.storeId, settings?.enableCloudSync, settings?.cloudSyncMode, syncReloadTrigger]);
 
   // Sync dark mode class with DOM
   useEffect(() => {
@@ -618,7 +640,21 @@ export default function App() {
   // Save Settings
   const handleSaveSettings = (newSettings: StoreSettings) => {
     setSettings(newSettings);
-    persistDatabase({ settings: newSettings });
+    let updatedUsers = users;
+    if (newSettings.ownerName) {
+      const currentUsers = users.length > 0 ? users : db.load().users;
+      updatedUsers = currentUsers.map((u) => {
+        if (u.role === 'OWNER') {
+          return { ...u, name: newSettings.ownerName };
+        }
+        return u;
+      });
+      setUsers(updatedUsers);
+      if (currentUser && currentUser.role === 'OWNER') {
+        setCurrentUser((prev) => (prev ? { ...prev, name: newSettings.ownerName } : null));
+      }
+    }
+    persistDatabase({ settings: newSettings, users: updatedUsers });
   };
 
   // Save Users
@@ -649,12 +685,15 @@ export default function App() {
   const handleUpdateOwner = (newName: string, newPin?: string) => {
     // 1. Update currentUser
     if (currentUser) {
-      const updatedCurrent: CashierUser = {
-        ...currentUser,
-        name: newName,
-        ...(newPin ? { pin: newPin } : {}),
-      };
-      setCurrentUser(updatedCurrent);
+      setCurrentUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: newName,
+              ...(newPin ? { pin: newPin } : {}),
+            }
+          : null
+      );
     }
 
     // 2. Update users in DB
@@ -671,9 +710,10 @@ export default function App() {
     });
     setUsers(updatedUsers);
 
-    // 3. Update store settings ownerName
+    // 3. Update store settings ownerName using latest db settings
+    const currentDbSettings = db.load().settings || settings;
     const updatedSettings: StoreSettings = {
-      ...settings,
+      ...currentDbSettings,
       ownerName: newName,
     };
     setSettings(updatedSettings);
@@ -735,6 +775,11 @@ export default function App() {
     }
   };
 
+  const handleSelectCashierGroup = (group: 'ALL' | 'DIGITAL' | 'FISIK') => {
+    setCashierInitialGroup(group);
+    handleTabChange('cashier');
+  };
+
   return (
     <div
       id="pos-app-root"
@@ -760,6 +805,8 @@ export default function App() {
         onUpdateOwner={handleUpdateOwner}
         branches={branches}
         activeBranchId={activeBranchId}
+        activeCashierGroup={cashierInitialGroup}
+        onSelectCashierGroup={handleSelectCashierGroup}
       />
 
       {/* 2. Right Main Scrollable View Area */}
@@ -798,12 +845,14 @@ export default function App() {
               onOpenShiftModal={() => setIsShiftModalOpen(true)}
               onViewReceipt={(trx) => setSelectedReceipt(trx)}
               currentUser={currentUser}
+              onSelectCashierGroup={handleSelectCashierGroup}
             />
           )}
 
           {activeTab === 'cashier' && (
             <CashierView
               products={products}
+              transactions={transactions}
               cart={cart}
               setCart={setCart}
               heldCarts={heldCarts}
@@ -816,6 +865,8 @@ export default function App() {
               branches={branches}
               onSelectBranch={handleSetActiveBranch}
               onAdjustBranchBalances={handleRecordMutation}
+              onViewReceipt={(trx) => setSelectedReceipt(trx)}
+              initialCategoryGroup={cashierInitialGroup}
               darkMode={darkMode}
             />
           )}
@@ -892,11 +943,10 @@ export default function App() {
           onAddUser={handleAddUser}
           onLoginSuccess={(user) => {
             setCurrentUser(user);
-            // Cashier is strictly locked to their assigned branch
-            if (user.role === 'KASIR' && user.branchId) {
-              setActiveBranchId(user.branchId);
-              db.setActiveBranchId(user.branchId);
-            }
+            // Cabang terkunci sesuai akun yang login (Admin di Pusat, Kasir di Cabang masing-masing)
+            const targetBranchId = user.branchId || (user.role === 'OWNER' ? (branches[0]?.id || 'branch-pusat') : 'branch-cabang-2');
+            setActiveBranchId(targetBranchId);
+            db.setActiveBranchId(targetBranchId);
             // If no active shift, auto open shift modal on first login
             if (!activeShift) {
               setIsShiftModalOpen(true);

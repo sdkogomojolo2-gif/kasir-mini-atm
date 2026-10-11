@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
 import {
   DollarSign,
@@ -10,14 +9,12 @@ import {
   X,
   CreditCard,
   Building2,
-  Sparkles,
-  Timer,
   AlertCircle,
   User,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { CartItem, PaymentMethod, Transaction, StoreSettings, CashierUser } from '../types';
 import { formatRupiah } from '../services/export';
-import { generateDynamicQRIS } from '../services/qris';
 import { sound } from '../services/sound';
 
 interface CheckoutModalProps {
@@ -54,7 +51,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [notes, setNotes] = useState<string>('');
   const [digitalProvider, setDigitalProvider] = useState<'GOPAY' | 'OVO' | 'DANA' | 'SHOPEEPAY' | 'TRANSFER_BANK'>('GOPAY');
   const [bankName, setBankName] = useState<string>('BCA');
-  const [qrisTimer, setQrisTimer] = useState<number>(300);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // Suggested Cash Denominations
@@ -74,20 +70,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (isOpen) {
       setCashGiven(grandTotal);
       setPaymentMethod('TUNAI');
-      setQrisTimer(300);
       setIsProcessing(false);
     }
   }, [isOpen, grandTotal]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isOpen && paymentMethod === 'QRIS' && qrisTimer > 0) {
-      interval = setInterval(() => {
-        setQrisTimer((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isOpen, paymentMethod, qrisTimer]);
 
   if (!isOpen) return null;
 
@@ -99,17 +84,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const changeAmount = Math.max(0, cashGiven - grandTotal);
   const isCashSufficient = cashGiven >= grandTotal;
-
-  const qrisPayload =
-    settings.qrisMode === 'RAW_STRING' && settings.qrisRawString
-      ? settings.qrisRawString
-      : generateDynamicQRIS({
-          merchantName: settings.qrisMerchantName || settings.storeName,
-          merchantCity: settings.qrisCity || 'JAKARTA',
-          nmid: settings.qrisNmid || 'ID1020038920192',
-          amount: grandTotal,
-          invoiceNumber,
-        });
 
   const handleCompleteTransaction = (chosenMethod: PaymentMethod = paymentMethod) => {
     if (chosenMethod === 'TUNAI' && !isCashSufficient) {
@@ -176,12 +150,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setTimeout(() => {
       onPaymentSuccess(transaction);
     }, 200);
-  };
-
-  const formatTimer = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -376,15 +344,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
           )}
 
-          {/* 2. QRIS METHOD */}
+          {/* 2. QRIS METHOD (FOTO QRIS RESMI TOKO) */}
           {paymentMethod === 'QRIS' && (
             <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-xl bg-zinc-950 border border-zinc-800">
               <div className="bg-white p-3 rounded-xl shadow-md border border-zinc-300 flex flex-col items-center shrink-0">
-                <div className="text-[9px] font-black tracking-widest text-zinc-800 uppercase mb-1 font-mono">
-                  {settings.qrisMode === 'CUSTOM_IMAGE' && settings.qrisImageUrl ? 'QRIS RESMI TOKO' : 'QRIS DINAMIS'}
+                <div className="text-[9px] font-black tracking-widest text-zinc-800 uppercase mb-1.5 font-mono">
+                  QRIS RESMI TOKO
                 </div>
-                {settings.qrisMode === 'CUSTOM_IMAGE' && settings.qrisImageUrl ? (
-                  <div className="w-[160px] h-[160px] flex items-center justify-center bg-white p-1 overflow-hidden">
+                {settings.qrisImageUrl ? (
+                  <div className="w-[170px] h-[170px] flex items-center justify-center bg-white p-1 overflow-hidden">
                     <img
                       src={settings.qrisImageUrl}
                       alt="QRIS Toko"
@@ -392,29 +360,39 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     />
                   </div>
                 ) : (
-                  <QRCodeSVG
-                    value={qrisPayload}
-                    size={160}
-                    level="M"
-                    includeMargin={false}
-                  />
+                  <div className="w-[170px] h-[170px] flex flex-col items-center justify-center p-3 text-center bg-zinc-50 rounded-lg border-2 border-dashed border-zinc-300">
+                    <ImageIcon className="w-10 h-10 text-zinc-400 mb-2" />
+                    <span className="text-[11px] font-extrabold text-zinc-700 leading-tight">
+                      Foto QRIS Belum Diunggah
+                    </span>
+                    <span className="text-[9px] text-zinc-500 mt-1 leading-tight">
+                      Unggah foto QRIS toko di menu Pengaturan &gt; QRIS Pembayaran
+                    </span>
+                  </div>
                 )}
-                <div className="text-[9px] font-mono text-zinc-600 mt-1.5">
+                <div className="text-[10px] font-extrabold font-mono text-zinc-800 mt-1.5 text-center truncate max-w-[170px]">
                   {settings.qrisMerchantName || settings.storeName}
                 </div>
               </div>
 
-              <div className="space-y-2.5 flex-1 text-center sm:text-left">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono bg-zinc-900 border border-zinc-700 text-zinc-300">
-                  <Timer className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Masa berlaku: {formatTimer(qrisTimer)}</span>
+              <div className="space-y-3 flex-1 text-center sm:text-left">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono bg-purple-500/10 border border-purple-500/30 text-purple-400">
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>Scan QRIS Toko</span>
                 </div>
-                <h4 className="font-extrabold text-sm">{settings.qrisMerchantName || settings.storeName}</h4>
-                <p className="text-xs text-zinc-400">
-                  Pelanggan scan menggunakan BCA Mobile, Mandiri Livin, BRImo, GoPay, OVO, ShopeePay, DANA, atau LinkAja.
-                </p>
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
-                  Nominal: <strong className="font-mono text-amber-400">{formatRupiah(grandTotal)}</strong>
+                <div>
+                  <h4 className="font-extrabold text-sm text-white">
+                    {settings.qrisMerchantName || settings.storeName}
+                  </h4>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Pelanggan dapat scan barcode di samping menggunakan aplikasi m-banking (BCA, BRImo, Livin Mandiri, BNI Mobile) atau e-wallet (GoPay, OVO, ShopeePay, DANA, LinkAja).
+                  </p>
+                </div>
+                <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
+                  <div className="text-[10px] text-zinc-400 uppercase font-mono">Total Pembayaran:</div>
+                  <strong className="font-mono text-xl text-amber-400 block mt-0.5">
+                    {formatRupiah(grandTotal)}
+                  </strong>
                 </div>
               </div>
             </div>

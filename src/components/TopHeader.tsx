@@ -152,41 +152,30 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
       {/* Right Action Bar: Branch Switcher, Clock, Cloud Sync, Shift, Theme Toggle */}
       <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Active Branch Selector / Indicator */}
+        {/* Active Branch Indicator (Terkunci Sesuai Akun Login) */}
         {branches && branches.length > 0 && (
-          isCashier ? (
-            <div
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-200 text-xs font-black"
-              title={`Akun Kasir Cabang: ${activeBranch?.name || 'Cabang'}. Anda hanya dapat mengakses pembukuan cabang ini.`}
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-black ${
+              isCashier
+                ? 'border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-200'
+                : 'border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100'
+            }`}
+            title={isCashier ? `Lokasi Bertugas: ${activeBranch?.name || 'Cabang'}` : 'Mode Administrator: Mengawasi Seluruh Cabang'}
+          >
+            <span className="text-xs">{isCashier ? '🔒' : '🏢'}</span>
+            <span className="max-w-[130px] sm:max-w-[180px] truncate">
+              {isCashier ? (activeBranch?.name || 'Cabang') : 'Semua Cabang'}
+            </span>
+            <span
+              className={`text-[9px] px-1.5 py-0.5 rounded font-black ${
+                isCashier
+                  ? 'bg-amber-500 text-zinc-950'
+                  : 'bg-zinc-800 text-amber-400 border border-zinc-700'
+              }`}
             >
-              <span className="text-xs">🔒</span>
-              <span className="max-w-[130px] sm:max-w-[180px] truncate">
-                {activeBranch?.name || 'Cabang Kasir'}
-              </span>
-              <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500 text-zinc-950 font-black">
-                Kasir
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 text-xs font-black">
-              <span className="text-xs">🏢</span>
-              <select
-                value={activeBranchId || branches[0]?.id}
-                onChange={(e) => onSelectBranch?.(e.target.value)}
-                className="bg-transparent font-black text-xs focus:outline-none cursor-pointer text-zinc-950 dark:text-zinc-100 max-w-[120px] sm:max-w-[170px] truncate"
-                title="Pilih Cabang / Toko (Mode Admin)"
-              >
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id} className="bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 font-bold">
-                    {b.name} ({b.code})
-                  </option>
-                ))}
-              </select>
-              <span className="hidden xl:inline text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-amber-400 border border-zinc-700 font-black">
-                Admin
-              </span>
-            </div>
-          )
+              {isCashier ? 'Kasir' : 'Admin'}
+            </span>
+          </div>
         )}
 
         {/* Real-time Clock */}
@@ -201,11 +190,32 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
         {/* Cloud Sync Status Badge */}
         <div
-          title="Status Koneksi & Penyimpanan Aman"
+          title={
+            cloudSyncStatus === 'SYNCED'
+              ? `Database Cloud Aktif${
+                  settings.firebaseCustomConfig?.projectId
+                    ? ` (Proyek: ${settings.firebaseCustomConfig.projectId})`
+                    : ''
+                }`
+              : 'Mode Offline Mandiri (Data Aman di Penyimpanan Perangkat)'
+          }
           className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 text-xs font-black"
         >
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="text-[11px] font-black">Online</span>
+          {cloudSyncStatus === 'SYNCED' ? (
+            <>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-black truncate max-w-[120px]">
+                {settings.firebaseCustomConfig?.projectId
+                  ? `Cloud: ${settings.firebaseCustomConfig.projectId}`
+                  : 'Cloud Aktif'}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="w-2 h-2 rounded-full bg-zinc-400" />
+              <span className="text-[11px] font-black">Mode Offline</span>
+            </>
+          )}
         </div>
 
         {/* Open in new tab button for full hardware access (Bluetooth) */}

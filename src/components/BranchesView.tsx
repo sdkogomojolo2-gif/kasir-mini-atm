@@ -576,7 +576,7 @@ export const BranchesView: React.FC<BranchesViewProps> = ({
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             {isCashier
               ? 'Anda bertugas di cabang ini. Semua transaksi kasir terhubung ke cabang ini.'
-              : 'Klik "Jadikan Cabang Aktif" untuk melayani transaksi di kasir cabang tersebut'}
+              : 'Akun Admin mengawasi seluruh cabang. Untuk melayani transaksi cabang tertentu, silakan login dengan akun PIN kasir cabang.'}
           </span>
         </div>
 
@@ -585,15 +585,12 @@ export const BranchesView: React.FC<BranchesViewProps> = ({
             const isActive = branch.id === activeBranchId;
             const branchTotalModal =
               (branch.cashDrawerBalance || 0) + (branch.bankBalance || 0) + (branch.digiposBalance || 0);
+            const assignedKasirList = users.filter((u) => u.role === 'KASIR' && u.branchId === branch.id);
 
             return (
               <div
                 key={branch.id}
-                className={`p-5 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
-                  isActive
-                    ? 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500 shadow-md ring-2 ring-amber-500/30'
-                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 shadow-2xs'
-                }`}
+                className="p-5 rounded-2xl border transition-all duration-200 flex flex-col justify-between bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 shadow-2xs"
               >
                 <div>
                   {/* Card Header */}
@@ -608,9 +605,9 @@ export const BranchesView: React.FC<BranchesViewProps> = ({
                             PUSAT
                           </span>
                         )}
-                        {isActive && (
+                        {isCashier && (
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500 text-zinc-950 font-black">
-                            {isCashier ? 'CABANG ANDA' : 'AKTIF DILAYANI'}
+                            CABANG ANDA
                           </span>
                         )}
                       </div>
@@ -642,6 +639,16 @@ export const BranchesView: React.FC<BranchesViewProps> = ({
                       </div>
                     )}
                   </div>
+
+                  {/* Petugas Kasir Yang Ditugaskan */}
+                  {assignedKasirList.length > 0 && (
+                    <div className="text-[11px] text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5 mb-3 bg-zinc-100/70 dark:bg-zinc-800/70 px-2.5 py-1 rounded-lg">
+                      <span className="text-amber-500 font-bold">👤 Kasir:</span>
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-200">
+                        {assignedKasirList.map((k) => k.name).join(', ')}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Address and Phone */}
                   <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-1 mb-4">
@@ -697,45 +704,47 @@ export const BranchesView: React.FC<BranchesViewProps> = ({
                   </div>
                 </div>
 
-                {/* Bottom Card Actions */}
-                <div className="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/60">
-                  {!isActive ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSetActiveBranch(branch.id);
-                        sound.playSuccess();
-                      }}
-                      className="flex-1 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-amber-500 hover:text-zinc-950 text-zinc-700 dark:text-zinc-200 font-bold text-xs transition-colors cursor-pointer text-center"
-                    >
-                      Jadikan Cabang Aktif
-                    </button>
+                {/* Bottom Card Actions: Khusus Admin atau Kasir */}
+                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/60">
+                  {isCashier ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-xs text-center border border-amber-500/30 flex items-center justify-center gap-1.5">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Cabang Tugas Anda</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenMutationModal(branch.id)}
+                        className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                        title="Catat Mutasi Saldo Kas / Bank Cabang Ini"
+                      >
+                        <ArrowUpDown className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Mutasi</span>
+                      </button>
+                    </div>
                   ) : (
-                    <div className="flex-1 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-xs text-center border border-amber-500/30 flex items-center justify-center gap-1">
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Sedang Aktif di Kasir</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAdjustRealModal(branch)}
+                        className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                        title="Atur & Sesuaikan Saldo Riil Cabang Ini (Khusus Pemilik/Admin)"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-zinc-950" />
+                        <span>Atur Saldo</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenMutationModal(branch.id)}
+                        className="flex-1 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                        title="Catat Mutasi Saldo Kas / Bank Cabang Ini"
+                      >
+                        <ArrowUpDown className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Catat Mutasi</span>
+                      </button>
                     </div>
                   )}
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenAdjustRealModal(branch)}
-                    className="px-2.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs transition-colors cursor-pointer flex items-center gap-1 shrink-0"
-                    title="Atur & Sesuaikan Saldo Riil Cabang Ini (Khusus Pemilik/Admin)"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-950" />
-                    <span>Atur Saldo</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenMutationModal(branch.id)}
-                    className="px-2.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
-                    title="Catat Mutasi Saldo Kas / Bank Cabang Ini"
-                  >
-                    <ArrowUpDown className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Mutasi</span>
-                  </button>
                 </div>
               </div>
             );

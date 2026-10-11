@@ -8,7 +8,7 @@ import {
   writeBatch,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db as firestoreDb } from './firebase';
+import { getFirestoreDb, getActiveFirebaseInfo } from './firebase';
 import {
   Product,
   Transaction,
@@ -43,6 +43,14 @@ export class CloudSyncService {
     }
   }
 
+  public isSyncEnabled(settings?: StoreSettings): boolean {
+    const activeInfo = getActiveFirebaseInfo();
+    if (activeInfo.isCustom && activeInfo.isEnabled) {
+      return true;
+    }
+    return Boolean(settings?.enableCloudSync);
+  }
+
   // Get Store ID for multi-tenant isolation
   public getStoreId(settings?: StoreSettings): string {
     const custom = settings?.storeId;
@@ -64,7 +72,12 @@ export class CloudSyncService {
     activeShift: CashierShift | null;
     branches?: StoreBranch[];
   }): Promise<boolean> {
+    if (!this.isSyncEnabled(data.settings)) {
+      return true; // Operating in local offline mode cleanly
+    }
+
     try {
+      const firestoreDb = getFirestoreDb();
       const storeId = this.getStoreId(data.settings);
       const storeRef = doc(firestoreDb, 'stores', storeId);
       await setDoc(
@@ -113,16 +126,22 @@ export class CloudSyncService {
     onTransactionsChange: (transactions: Transaction[]) => void,
     onDebtsChange: (debts: CustomerDebt[]) => void,
     onSettingsChange: (settings: StoreSettings) => void,
-    customStoreId?: string
+    customStoreId?: string,
+    settings?: StoreSettings
   ): () => void {
     // Clear old subscriptions
     this.unsubscribe();
+
+    if (!this.isSyncEnabled(settings)) {
+      return () => {};
+    }
 
     const storeId = customStoreId && customStoreId.trim()
       ? customStoreId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_')
       : DEFAULT_STORE_ID;
 
     try {
+      const firestoreDb = getFirestoreDb();
       // 1. Listen to Store Settings
       const storeRef = doc(firestoreDb, 'stores', storeId);
       const unsubStore = onSnapshot(
@@ -171,7 +190,6 @@ export class CloudSyncService {
               trxs.push(docSnap.data() as Transaction);
             });
             if (trxs.length > 0) {
-              // Sort by date descending
               trxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
               onTransactionsChange(trxs);
             }
@@ -211,20 +229,25 @@ export class CloudSyncService {
   }
 
   // Pull initial cloud data
-  public async pullFullStoreFromCloud(customStoreId?: string): Promise<{
+  public async pullFullStoreFromCloud(customStoreId?: string, settings?: StoreSettings): Promise<{
     products?: Product[];
     transactions?: Transaction[];
     debts?: CustomerDebt[];
     settings?: StoreSettings;
   } | null> {
+    if (!this.isSyncEnabled(settings)) {
+      return null;
+    }
+
     try {
+      const firestoreDb = getFirestoreDb();
       const storeId = customStoreId && customStoreId.trim()
         ? customStoreId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_')
         : DEFAULT_STORE_ID;
 
       const storeRef = doc(firestoreDb, 'stores', storeId);
       const storeSnap = await getDoc(storeRef);
-      const settings = storeSnap.exists() ? storeSnap.data()?.settings : undefined;
+      const fetchedSettings = storeSnap.exists() ? storeSnap.data()?.settings : undefined;
 
       const productsCol = collection(firestoreDb, `stores/${storeId}/products`);
       const prodSnap = await getDocs(productsCol);
@@ -245,7 +268,7 @@ export class CloudSyncService {
         products: products.length > 0 ? products : undefined,
         transactions: transactions.length > 0 ? transactions : undefined,
         debts: debts.length > 0 ? debts : undefined,
-        settings,
+        settings: fetchedSettings,
       };
     } catch (err) {
       console.warn('Error pulling cloud data:', err);
@@ -256,6 +279,7 @@ export class CloudSyncService {
   // Wipe all store documents from Firestore Cloud
   public async wipeCloudStore(customStoreId?: string): Promise<boolean> {
     try {
+      const firestoreDb = getFirestoreDb();
       const storeId = customStoreId && customStoreId.trim()
         ? customStoreId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_')
         : DEFAULT_STORE_ID;

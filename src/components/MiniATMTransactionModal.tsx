@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -17,6 +17,7 @@ import {
   Sparkles,
   Printer,
   Coins,
+  Check,
 } from 'lucide-react';
 import {
   ServiceType,
@@ -36,6 +37,8 @@ interface MiniATMTransactionModalProps {
   settings: StoreSettings;
   currentUser: CashierUser | null;
   initialService?: ServiceType;
+  initialProvider?: string;
+  initialNominal?: number;
   onCompleteTransaction: (
     trx: Transaction,
     balanceChanges: { cashChange: number; bankChange: number; digiposChange: number },
@@ -68,14 +71,50 @@ const EWALLET_OPTIONS = [
   { code: 'MAXIM', name: 'Maxim Driver/Cust', color: 'bg-yellow-500', icon: '🚖' },
 ];
 
-const PULSA_NOMINALS = [
-  { nominal: 5000, buy: 5500, fee: 2000, sell: 7500 },
-  { nominal: 10000, buy: 10400, fee: 2000, sell: 12500 },
-  { nominal: 15000, buy: 15200, fee: 2000, sell: 17500 },
-  { nominal: 20000, buy: 20100, fee: 2500, sell: 22500 },
-  { nominal: 25000, buy: 25100, fee: 2500, sell: 27500 },
-  { nominal: 50000, buy: 49800, fee: 2500, sell: 52500 },
-  { nominal: 100000, buy: 98500, fee: 3000, sell: 101500 },
+export interface PulsaNominalItem {
+  nominal: number;
+  fee: number;
+  sell: number;
+  tier: '5k-49k' | '50k-500k';
+}
+
+// Aturan biaya admin pulsa: 5k-49k admin 3.000, 50k-500k admin 5.000
+export const getPulsaAdminFee = (nominal: number): number => {
+  if (nominal >= 5000 && nominal < 50000) return 3000;
+  if (nominal >= 50000 && nominal <= 500000) return 5000;
+  return nominal < 50000 ? 3000 : 5000;
+};
+
+export const PULSA_NOMINALS: PulsaNominalItem[] = [
+  // Tier 1: 5.000 s/d 49.000 (Admin Rp 3.000)
+  { nominal: 5000, fee: 3000, sell: 8000, tier: '5k-49k' },
+  { nominal: 10000, fee: 3000, sell: 13000, tier: '5k-49k' },
+  { nominal: 15000, fee: 3000, sell: 18000, tier: '5k-49k' },
+  { nominal: 20000, fee: 3000, sell: 23000, tier: '5k-49k' },
+  { nominal: 25000, fee: 3000, sell: 28000, tier: '5k-49k' },
+  { nominal: 30000, fee: 3000, sell: 33000, tier: '5k-49k' },
+  { nominal: 40000, fee: 3000, sell: 43000, tier: '5k-49k' },
+
+  // Tier 2: 50.000 s/d 500.000 (Admin Rp 5.000)
+  { nominal: 50000, fee: 5000, sell: 55000, tier: '50k-500k' },
+  { nominal: 60000, fee: 5000, sell: 65000, tier: '50k-500k' },
+  { nominal: 70000, fee: 5000, sell: 75000, tier: '50k-500k' },
+  { nominal: 75000, fee: 5000, sell: 80000, tier: '50k-500k' },
+  { nominal: 100000, fee: 5000, sell: 105000, tier: '50k-500k' },
+  { nominal: 150000, fee: 5000, sell: 155000, tier: '50k-500k' },
+  { nominal: 200000, fee: 5000, sell: 205000, tier: '50k-500k' },
+  { nominal: 300000, fee: 5000, sell: 305000, tier: '50k-500k' },
+  { nominal: 500000, fee: 5000, sell: 505000, tier: '50k-500k' },
+];
+
+export const CELLULAR_OPERATORS = [
+  { id: 'ALL', name: 'Semua Operator', badge: 'Semua', color: 'border-zinc-700 bg-zinc-800 text-zinc-100', dot: 'bg-zinc-400' },
+  { id: 'Telkomsel', name: 'Telkomsel', badge: 'Tsel', color: 'border-red-500/40 bg-red-500/10 text-red-400', activeBg: 'bg-red-600 text-white border-red-500', dot: 'bg-red-500', prefixes: ['0811', '0812', '0813', '0821', '0822', '0823', '0852', '0853', '0851'] },
+  { id: 'IM3', name: 'IM3 (Indosat)', badge: 'IM3', color: 'border-amber-500/40 bg-amber-500/10 text-amber-400', activeBg: 'bg-amber-500 text-zinc-950 font-black border-amber-500', dot: 'bg-amber-400', prefixes: ['0814', '0815', '0816', '0855', '0856', '0857', '0858'] },
+  { id: 'XL', name: 'XL Axiata', badge: 'XL', color: 'border-blue-500/40 bg-blue-500/10 text-blue-400', activeBg: 'bg-blue-600 text-white border-blue-500', dot: 'bg-blue-500', prefixes: ['0817', '0818', '0819', '0859', '0877', '0878'] },
+  { id: 'Axis', name: 'Axis', badge: 'Axis', color: 'border-purple-500/40 bg-purple-500/10 text-purple-400', activeBg: 'bg-purple-600 text-white border-purple-500', dot: 'bg-purple-500', prefixes: ['0831', '0832', '0833', '0838'] },
+  { id: 'Tri', name: 'Tri (3)', badge: 'Tri', color: 'border-orange-500/40 bg-orange-500/10 text-orange-400', activeBg: 'bg-orange-500 text-white border-orange-500', dot: 'bg-orange-500', prefixes: ['0895', '0896', '0897', '0898', '0899'] },
+  { id: 'Smartfren', name: 'Smartfren', badge: 'Smart', color: 'border-rose-500/40 bg-rose-500/10 text-rose-400', activeBg: 'bg-rose-500 text-white border-rose-500', dot: 'bg-rose-400', prefixes: ['0881', '0882', '0883', '0884', '0885', '0886', '0887', '0888', '0889'] },
 ];
 
 const DATA_PACKAGES = [
@@ -93,6 +132,8 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
   settings,
   currentUser,
   initialService = 'TARIK_TUNAI',
+  initialProvider,
+  initialNominal,
   onCompleteTransaction,
   darkMode,
 }) => {
@@ -116,28 +157,42 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
   const [adminMode, setAdminMode] = useState<'LUAR' | 'DALAM'>('LUAR');
   const [notes, setNotes] = useState('');
 
+  // Pulsa Sub Menu & Operator State
+  const [selectedOperator, setSelectedOperator] = useState<string>(initialProvider || 'ALL');
+  const [pulsaTierFilter, setPulsaTierFilter] = useState<'ALL' | '5k-49k' | '50k-500k'>('ALL');
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialService) setActiveTab(initialService);
+      if (initialProvider) setSelectedOperator(initialProvider);
+      if (initialNominal) {
+        setNominalAmount(initialNominal);
+        setCustomNominalInput(String(initialNominal));
+        if (initialService === 'PULSA') {
+          const fee = getPulsaAdminFee(initialNominal);
+          setAdminFee(fee);
+          setCustomFeeInput(String(fee));
+        }
+      } else if (initialService === 'PULSA') {
+        // Default initial pulsa to 10k with fee 3000
+        setNominalAmount(10000);
+        setCustomNominalInput('10000');
+        setAdminFee(3000);
+        setCustomFeeInput('3000');
+      }
+    }
+  }, [isOpen, initialService, initialProvider, initialNominal]);
+
   if (!isOpen) return null;
 
   // Auto detect cellular provider from phone prefix
   const detectProvider = (phone: string): string => {
     const clean = phone.replace(/[^0-9]/g, '');
-    if (clean.startsWith('0811') || clean.startsWith('0812') || clean.startsWith('0813') || clean.startsWith('0821') || clean.startsWith('0822') || clean.startsWith('0852') || clean.startsWith('0853')) {
-      return 'Telkomsel';
-    }
-    if (clean.startsWith('0814') || clean.startsWith('0815') || clean.startsWith('0816') || clean.startsWith('0855') || clean.startsWith('0856') || clean.startsWith('0857') || clean.startsWith('0858')) {
-      return 'Indosat';
-    }
-    if (clean.startsWith('0817') || clean.startsWith('0818') || clean.startsWith('0819') || clean.startsWith('0859') || clean.startsWith('0877') || clean.startsWith('0878')) {
-      return 'XL Axiata';
-    }
-    if (clean.startsWith('0831') || clean.startsWith('0832') || clean.startsWith('0838')) {
-      return 'Axis';
-    }
-    if (clean.startsWith('0895') || clean.startsWith('0896') || clean.startsWith('0897') || clean.startsWith('0898') || clean.startsWith('0899')) {
-      return 'Tri (3)';
-    }
-    if (clean.startsWith('0881') || clean.startsWith('0882') || clean.startsWith('0887') || clean.startsWith('0888') || clean.startsWith('0889')) {
-      return 'Smartfren';
+    if (clean.length < 4) return 'Semua Operator';
+    for (const op of CELLULAR_OPERATORS) {
+      if (op.prefixes && op.prefixes.some((p) => clean.startsWith(p))) {
+        return op.name;
+      }
     }
     return 'Semua Operator';
   };
@@ -164,7 +219,20 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
   const handleNominalSelect = (val: number) => {
     setNominalAmount(val);
     setCustomNominalInput(String(val));
+    if (activeTab === 'PULSA') {
+      const fee = getPulsaAdminFee(val);
+      setAdminFee(fee);
+      setCustomFeeInput(String(fee));
+    }
     sound.playBeep(700, 0.03);
+  };
+
+  const handleSelectPulsaNominal = (item: PulsaNominalItem) => {
+    setNominalAmount(item.nominal);
+    setCustomNominalInput(String(item.nominal));
+    setAdminFee(item.fee);
+    setCustomFeeInput(String(item.fee));
+    sound.playBeep(750, 0.03);
   };
 
   const handleFeeChange = (val: number) => {
@@ -260,10 +328,15 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
       bankChange = -nominalAmount;
       mutationDesc = `Transfer ${sourceBank} ke ${destinationBank} Rek: ${accountNumber} a/n ${accountName || 'Penerima'}`;
     } else if (activeTab === 'PULSA' || activeTab === 'PAKET_DATA') {
+      const effectiveOperatorName =
+        selectedOperator !== 'ALL'
+          ? (CELLULAR_OPERATORS.find((o) => o.id === selectedOperator)?.name || selectedOperator)
+          : (detectedProvider !== 'Semua Operator' ? detectedProvider : 'Telkomsel');
+
       serviceTitle = activeTab === 'PULSA' ? 'ISI PULSA REGULER' : 'PAKET DATA INTERNET';
       productName = activeTab === 'PULSA'
-        ? `Pulsa ${detectedProvider} ${formatRupiah(nominalAmount)}`
-        : `${selectedDataPkg} (${detectedProvider})`;
+        ? `Pulsa ${effectiveOperatorName} ${formatRupiah(nominalAmount)}`
+        : `${selectedDataPkg} (${effectiveOperatorName})`;
       totalCost = nominalAmount;
       grandTotal = nominalAmount + adminFee;
       profit = adminFee;
@@ -272,7 +345,7 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
       // Saldo digipos agen berkurang modal: -nominal
       cashChange = nominalAmount + adminFee;
       digiposChange = -nominalAmount;
-      mutationDesc = `${serviceTitle} ${customerPhone} (${detectedProvider})`;
+      mutationDesc = `${serviceTitle} ${customerPhone} (${effectiveOperatorName})`;
     } else if (activeTab === 'TOPUP_EWALLET') {
       serviceTitle = `TOP UP ${selectedEwallet}`;
       productName = `Top Up ${selectedEwallet} ${formatRupiah(nominalAmount)}`;
@@ -800,10 +873,52 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
           {/* TAB 4: PULSA & PAKET DATA */}
           {activeTab === 'PULSA' && (
             <div className="space-y-3">
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 flex items-start gap-2">
+              {/* Info Banner Aturan Admin Pulsa */}
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 flex items-start gap-2.5">
                 <Smartphone className="w-4 h-4 shrink-0 mt-0.5" />
-                <div>
-                  <strong>Isi Ulang Pulsa &amp; Kuota Data:</strong> Masukkan nomor HP, operator akan terdeteksi otomatis (Telkomsel, Indosat, XL, Tri, Axis, Smartfren).
+                <div className="space-y-0.5">
+                  <div className="font-bold">
+                    Tarif Admin Pulsa Agen:
+                  </div>
+                  <div className="text-[11px] text-amber-300/90 leading-relaxed">
+                    • Pulsa <strong className="text-white">Rp 5.000 s/d Rp 49.000</strong>: Biaya Admin <strong className="text-emerald-400">Rp 3.000</strong><br />
+                    • Pulsa <strong className="text-white">Rp 50.000 s/d Rp 500.000</strong>: Biaya Admin <strong className="text-sky-400">Rp 5.000</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub Menu Operator Pulsa */}
+              <div>
+                <label className="block text-xs font-bold text-zinc-400 mb-1.5 font-mono flex items-center justify-between">
+                  <span>Sub Menu Operator:</span>
+                  <span className="text-[11px] text-amber-400 font-bold">
+                    {selectedOperator === 'ALL'
+                      ? (detectedProvider !== 'Semua Operator' ? `Terdeteksi: ${detectedProvider}` : 'Pilih / Otomatis Deteksi')
+                      : `Operator: ${selectedOperator}`}
+                  </span>
+                </label>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                  {CELLULAR_OPERATORS.map((op) => {
+                    const isSelected = selectedOperator === op.id;
+                    return (
+                      <button
+                        key={op.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedOperator(op.id);
+                          sound.playBeep(650, 0.03);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? op.activeBg || 'bg-amber-500 text-zinc-950 border-amber-500 shadow-md font-black'
+                            : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                        }`}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${op.dot || 'bg-amber-400'}`} />
+                        <span>{op.name}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -817,12 +932,24 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
                       type="text"
                       required
                       value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomerPhone(val);
+                        const detected = detectProvider(val);
+                        if (detected !== 'Semua Operator') {
+                          if (detected.includes('Telkomsel')) setSelectedOperator('Telkomsel');
+                          else if (detected.includes('Indosat') || detected.includes('IM3')) setSelectedOperator('IM3');
+                          else if (detected.includes('XL')) setSelectedOperator('XL');
+                          else if (detected.includes('Axis')) setSelectedOperator('Axis');
+                          else if (detected.includes('Tri')) setSelectedOperator('Tri');
+                          else if (detected.includes('Smartfren')) setSelectedOperator('Smartfren');
+                        }
+                      }}
                       placeholder="0812xxxxxxx"
                       className="w-full px-3 py-2 rounded-xl border text-xs font-mono font-bold bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-amber-500 focus:outline-hidden"
                     />
                     <span className="absolute right-3 top-2 text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-amber-400 font-bold">
-                      {detectedProvider}
+                      {selectedOperator !== 'ALL' ? selectedOperator : detectedProvider}
                     </span>
                   </div>
                 </div>
@@ -872,6 +999,8 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
                           setSelectedDataPkg(pkg.name);
                           setNominalAmount(pkg.buy);
                           setAdminFee(pkg.sell - pkg.buy);
+                          setCustomNominalInput(String(pkg.buy));
+                          setCustomFeeInput(String(pkg.sell - pkg.buy));
                         }}
                         className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
                           selectedDataPkg === pkg.name
@@ -888,33 +1017,92 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
                   </div>
                 </div>
               ) : (
-                <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1.5">
-                    Pilih Nominal Pulsa:
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {PULSA_NOMINALS.map((p) => (
+                <div className="space-y-2">
+                  {/* Filter Tier Pulsa */}
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-zinc-400 font-mono">
+                      Pilih Nominal Pulsa:
+                    </label>
+                    <div className="flex items-center gap-1">
                       <button
-                        key={p.nominal}
                         type="button"
-                        onClick={() => {
-                          setNominalAmount(p.nominal);
-                          setAdminFee(p.sell - p.nominal);
-                        }}
-                        className={`p-2.5 rounded-xl border text-center cursor-pointer transition-all ${
-                          nominalAmount === p.nominal
-                            ? 'bg-amber-500 text-zinc-950 border-amber-500 font-bold'
-                            : 'bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                        onClick={() => setPulsaTierFilter('ALL')}
+                        className={`px-2 py-0.5 text-[10px] rounded-lg font-bold border transition-colors cursor-pointer ${
+                          pulsaTierFilter === 'ALL'
+                            ? 'bg-amber-500 text-zinc-950 border-amber-500'
+                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
                         }`}
                       >
-                        <div className="text-xs font-mono font-bold">
-                          {formatRupiah(p.nominal).replace('Rp ', '')}
-                        </div>
-                        <div className="text-[10px] opacity-80 mt-0.5">
-                          Jual: {formatRupiah(p.sell)}
-                        </div>
+                        Semua (16)
                       </button>
-                    ))}
+                      <button
+                        type="button"
+                        onClick={() => setPulsaTierFilter('5k-49k')}
+                        className={`px-2 py-0.5 text-[10px] rounded-lg font-bold border transition-colors cursor-pointer ${
+                          pulsaTierFilter === '5k-49k'
+                            ? 'bg-emerald-500 text-zinc-950 border-emerald-500'
+                            : 'bg-zinc-900 border-zinc-800 text-emerald-400 hover:bg-zinc-800'
+                        }`}
+                      >
+                        5rb - 49rb (Admin 3rb)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPulsaTierFilter('50k-500k')}
+                        className={`px-2 py-0.5 text-[10px] rounded-lg font-bold border transition-colors cursor-pointer ${
+                          pulsaTierFilter === '50k-500k'
+                            ? 'bg-sky-500 text-zinc-950 border-sky-500'
+                            : 'bg-zinc-900 border-zinc-800 text-sky-400 hover:bg-zinc-800'
+                        }`}
+                      >
+                        50rb - 500rb (Admin 5rb)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Nominal Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                    {PULSA_NOMINALS.filter(
+                      (p) => pulsaTierFilter === 'ALL' || p.tier === pulsaTierFilter
+                    ).map((p) => {
+                      const isSelected = nominalAmount === p.nominal;
+                      return (
+                        <button
+                          key={p.nominal}
+                          type="button"
+                          onClick={() => handleSelectPulsaNominal(p)}
+                          className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all relative ${
+                            isSelected
+                              ? 'bg-amber-500 text-zinc-950 border-amber-500 ring-2 ring-amber-400 shadow-md font-bold'
+                              : 'bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-xs font-mono font-black">
+                              {formatRupiah(p.nominal).replace('Rp ', '')}
+                            </span>
+                            <span
+                              className={`text-[9px] font-mono px-1 py-0.2 rounded font-bold ${
+                                isSelected
+                                  ? 'bg-zinc-950 text-amber-400'
+                                  : p.tier === '5k-49k'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                  : 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                              }`}
+                            >
+                              +Admin {p.fee >= 1000 ? `${p.fee / 1000}rb` : p.fee}
+                            </span>
+                          </div>
+                          <div
+                            className={`text-[10px] font-mono ${
+                              isSelected ? 'text-zinc-950 font-black' : 'text-zinc-400'
+                            }`}
+                          >
+                            Jual: {formatRupiah(p.sell)}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1115,21 +1303,30 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
                   required
                   value={customNominalInput}
                   onChange={(e) => {
+                    const val = Number(e.target.value) || 0;
                     setCustomNominalInput(e.target.value);
-                    setNominalAmount(Number(e.target.value) || 0);
+                    setNominalAmount(val);
+                    if (activeTab === 'PULSA' && val > 0) {
+                      const fee = getPulsaAdminFee(val);
+                      setAdminFee(fee);
+                      setCustomFeeInput(String(fee));
+                    }
                   }}
                   className="w-full px-3 py-2 rounded-xl border text-sm font-mono font-black bg-zinc-900 border-zinc-800 text-white focus:border-amber-500 focus:outline-hidden"
                 />
                 {/* Quick nominal buttons */}
                 <div className="flex flex-wrap gap-1 mt-1.5">
-                  {[50000, 100000, 200000, 500000, 1000000, 2000000, 5000000].map((amt) => (
+                  {(activeTab === 'PULSA'
+                    ? [5000, 10000, 20000, 25000, 50000, 100000, 200000, 500000]
+                    : [50000, 100000, 200000, 500000, 1000000, 2000000, 5000000]
+                  ).map((amt) => (
                     <button
                       key={amt}
                       type="button"
                       onClick={() => handleNominalSelect(amt)}
                       className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold cursor-pointer transition-colors ${
                         nominalAmount === amt
-                          ? 'bg-amber-500 text-zinc-950'
+                          ? 'bg-amber-500 text-zinc-950 font-black'
                           : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                       }`}
                     >
@@ -1158,18 +1355,23 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
                 />
                 {/* Quick fee buttons */}
                 <div className="flex flex-wrap gap-1 mt-1.5">
-                  {[2000, 3000, 5000, 7000, 10000, 15000].map((fee) => (
+                  {(activeTab === 'PULSA'
+                    ? [3000, 5000]
+                    : [2000, 3000, 5000, 7000, 10000, 15000]
+                  ).map((fee) => (
                     <button
                       key={fee}
                       type="button"
                       onClick={() => handleFeeChange(fee)}
                       className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold cursor-pointer transition-colors ${
                         adminFee === fee
-                          ? 'bg-emerald-500 text-zinc-950'
+                          ? 'bg-emerald-500 text-zinc-950 font-black'
                           : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                       }`}
                     >
-                      {formatRupiah(fee).replace('Rp ', '')}
+                      {activeTab === 'PULSA'
+                        ? (fee === 3000 ? 'Rp 3.000 (5k-49k)' : 'Rp 5.000 (50k-500k)')
+                        : formatRupiah(fee).replace('Rp ', '')}
                     </button>
                   ))}
                 </div>

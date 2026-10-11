@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import {
   Settings,
   ShieldCheck,
@@ -36,11 +35,25 @@ import {
   ExternalLink,
   Terminal,
   AlertCircle,
+  Database,
+  Server,
+  Radio,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
 } from 'lucide-react';
-import { StoreSettings, CashierUser } from '../types';
+import { StoreSettings, CashierUser, FirebaseCustomConfig } from '../types';
 import { db } from '../services/db';
 import { sound } from '../services/sound';
-import { generateDynamicQRIS } from '../services/qris';
+import {
+  getStoredCustomFirebaseConfig,
+  isCustomFirebaseEnabled,
+  testCustomFirebaseConfig,
+  switchActiveFirebase,
+  parseFirebaseConfigInput,
+  getActiveFirebaseInfo,
+} from '../services/firebase';
 import {
   bluetoothPrinter,
   BluetoothDeviceStatus,
@@ -194,29 +207,177 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [storeForm, setStoreForm] = useState<StoreSettings>(() => {
     const s = { ...settings };
     if (!s.ownerName) s.ownerName = 'Pemilik / Kasir Utama';
-    if (!s.qrisMode) s.qrisMode = 'DYNAMIC_NMID';
-    if (!s.qrisCity) s.qrisCity = 'JAKARTA';
+    s.qrisMode = 'CUSTOM_IMAGE';
     if (s.showSalesBrochure === undefined) s.showSalesBrochure = true;
-    if (s.storeName && (s.storeName.toLowerCase().includes('sawit') || s.storeName.toLowerCase().includes('hasil bumi'))) {
-      s.storeName = 'Toko Kelontong Berkah Sejahtera';
-      s.tagline = 'Lengkap, Murah & Melayani Sepenuh Hati';
-      s.address = 'Jl. Melati Raya No. 45, RT 03/05';
-      s.footerMessage = 'Terima Kasih Atas Kunjungan Anda!';
-    }
     return s;
   });
+
+  // Custom Database Setup state (Tips Nomor 3: Setup Database Mandiri)
+  const [firebaseSnippetInput, setFirebaseSnippetInput] = useState('');
+  const [fbApiKey, setFbApiKey] = useState('');
+  const [fbProjectId, setFbProjectId] = useState('');
+  const [fbAppId, setFbAppId] = useState('');
+  const [fbAuthDomain, setFbAuthDomain] = useState('');
+  const [fbStorageBucket, setFbStorageBucket] = useState('');
+  const [fbSenderId, setFbSenderId] = useState('');
+  const [isTestingFb, setIsTestingFb] = useState(false);
+  const [fbTestResult, setFbTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [activeFbInfo, setActiveFbInfo] = useState(() => getActiveFirebaseInfo());
+  const [showGuideTips, setShowGuideTips] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       const s = { ...settings };
       if (!s.ownerName) s.ownerName = 'Pemilik / Kasir Utama';
-      if (!s.qrisMode) s.qrisMode = 'DYNAMIC_NMID';
-      if (!s.qrisCity) s.qrisCity = 'JAKARTA';
+      s.qrisMode = 'CUSTOM_IMAGE';
       if (s.showSalesBrochure === undefined) s.showSalesBrochure = true;
       setStoreForm(s);
       setUserList([...users]);
+
+      // Load custom Firebase config if present
+      const storedFb = getStoredCustomFirebaseConfig() || s.customFirebaseConfig;
+      if (storedFb) {
+        setFbApiKey(storedFb.apiKey || '');
+        setFbProjectId(storedFb.projectId || '');
+        setFbAppId(storedFb.appId || '');
+        setFbAuthDomain(storedFb.authDomain || '');
+        setFbStorageBucket(storedFb.storageBucket || '');
+        setFbSenderId(storedFb.messagingSenderId || '');
+      }
+      setActiveFbInfo(getActiveFirebaseInfo());
+      setFbTestResult(null);
     }
-  }, [isOpen, settings, users]);
+  }, [isOpen]);
+
+  // Handle auto-parse snippet when pasted into the quick textarea
+  const handleSnippetPaste = (text: string) => {
+    setFirebaseSnippetInput(text);
+    const parsed = parseFirebaseConfigInput(text);
+    if (parsed) {
+      setFbApiKey(parsed.apiKey);
+      setFbProjectId(parsed.projectId);
+      setFbAppId(parsed.appId);
+      setFbAuthDomain(parsed.authDomain);
+      if (parsed.storageBucket) setFbStorageBucket(parsed.storageBucket);
+      if (parsed.messagingSenderId) setFbSenderId(parsed.messagingSenderId);
+      sound.playSuccess();
+      setStatusMsg({
+        text: `Berhasil mengekstrak konfigurasi Firebase proyek "${parsed.projectId}"!`,
+        type: 'success',
+      });
+      setTimeout(() => setStatusMsg(null), 3000);
+    }
+  };
+
+  // Test connection directly to Firestore
+  const handleTestFirebaseConnection = async () => {
+    if (!fbApiKey.trim() || !fbProjectId.trim() || !fbAppId.trim()) {
+      setFbTestResult({
+        success: false,
+        message: 'Mohon lengkapi minimal API Key, Project ID, dan App ID sebelum melakukan tes koneksi.',
+      });
+      sound.playError();
+      return;
+    }
+
+    setIsTestingFb(true);
+    setFbTestResult(null);
+
+    const configToTest: FirebaseCustomConfig = {
+      apiKey: fbApiKey.trim(),
+      projectId: fbProjectId.trim(),
+      appId: fbAppId.trim(),
+      authDomain: fbAuthDomain.trim() || `${fbProjectId.trim()}.firebaseapp.com`,
+      storageBucket: fbStorageBucket.trim() || `${fbProjectId.trim()}.appspot.com`,
+      messagingSenderId: fbSenderId.trim(),
+    };
+
+    const result = await testCustomFirebaseConfig(configToTest);
+    setIsTestingFb(false);
+    setFbTestResult(result);
+    if (result.success) {
+      sound.playSuccess();
+    } else {
+      sound.playError();
+    }
+  };
+
+  // Save & Connect custom database
+  const handleSaveAndConnectFirebase = async () => {
+    if (!fbApiKey.trim() || !fbProjectId.trim() || !fbAppId.trim()) {
+      setStatusMsg({
+        text: 'Mohon isi API Key, Project ID, dan App ID.',
+        type: 'error',
+      });
+      sound.playError();
+      setTimeout(() => setStatusMsg(null), 3000);
+      return;
+    }
+
+    const config: FirebaseCustomConfig = {
+      apiKey: fbApiKey.trim(),
+      projectId: fbProjectId.trim(),
+      appId: fbAppId.trim(),
+      authDomain: fbAuthDomain.trim() || `${fbProjectId.trim()}.firebaseapp.com`,
+      storageBucket: fbStorageBucket.trim() || `${fbProjectId.trim()}.appspot.com`,
+      messagingSenderId: fbSenderId.trim(),
+    };
+
+    try {
+      await switchActiveFirebase(config, true);
+      const updatedStoreForm: StoreSettings = {
+        ...storeForm,
+        customFirebaseConfig: config,
+        enableCloudSync: true,
+        cloudSyncMode: 'CUSTOM_FIREBASE',
+      };
+      setStoreForm(updatedStoreForm);
+      onSaveSettings(updatedStoreForm);
+      setActiveFbInfo(getActiveFirebaseInfo());
+      sound.playSuccess();
+      setStatusMsg({
+        text: `Sukses! Aplikasi kini tersambung ke database Cloud proyek "${config.projectId}".`,
+        type: 'success',
+      });
+      setTimeout(() => setStatusMsg(null), 3500);
+    } catch (err: any) {
+      sound.playError();
+      setStatusMsg({
+        text: `Gagal menyambungkan database: ${err.message}`,
+        type: 'error',
+      });
+      setTimeout(() => setStatusMsg(null), 4000);
+    }
+  };
+
+  // Disconnect to local offline mode
+  const handleDisconnectToLocalOffline = async () => {
+    if (
+      confirm(
+        'Kembalikan aplikasi ke Mode Offline Lokal?\n\nData toko Anda tetap aman tersimpan di perangkat ini tanpa sinkronisasi internet.'
+      )
+    ) {
+      try {
+        await switchActiveFirebase(null, false);
+        const updatedStoreForm: StoreSettings = {
+          ...storeForm,
+          enableCloudSync: false,
+          cloudSyncMode: 'LOCAL_OFFLINE',
+        };
+        setStoreForm(updatedStoreForm);
+        onSaveSettings(updatedStoreForm);
+        setActiveFbInfo(getActiveFirebaseInfo());
+        sound.playBeep(440, 0.05);
+        setStatusMsg({
+          text: 'Aplikasi kini berjalan dalam Mode Offline Lokal murni.',
+          type: 'success',
+        });
+        setTimeout(() => setStatusMsg(null), 3000);
+      } catch (err: any) {
+        sound.playError();
+      }
+    }
+  };
 
   // Handle upload of custom QRIS image
   const handleQrisImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,7 +412,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setStoreForm((prev) => ({
       ...prev,
       qrisImageUrl: undefined,
-      qrisMode: 'DYNAMIC_NMID',
+      qrisMode: 'CUSTOM_IMAGE',
     }));
     sound.playBeep(440, 0.05);
   };
@@ -275,14 +436,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSaveStoreSettings = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSaveSettings(storeForm);
-    if (storeForm.ownerName) {
-      onUpdateOwner?.(storeForm.ownerName);
-    }
+  const handleSaveStoreSettings = (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const formToSave: StoreSettings = {
+      ...storeForm,
+      qrisMode: 'CUSTOM_IMAGE',
+    };
+    setStoreForm(formToSave);
+    onSaveSettings(formToSave);
     sound.playSuccess();
-    setStatusMsg({ text: 'Pengaturan toko berhasil disimpan!', type: 'success' });
+    setStatusMsg({ text: 'Pengaturan berhasil disimpan!', type: 'success' });
     setTimeout(() => setStatusMsg(null), 3000);
   };
 
@@ -673,9 +836,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* Toggles */}
               <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
                 <label className="flex items-center justify-between cursor-pointer text-xs font-semibold text-zinc-200">
-                  <div className="flex items-center gap-2">
-                    <Printer className="w-4 h-4 text-amber-400" />
-                    <span>Cetak Struk Otomatis Setiap Selesai Pembayaran</span>
+                  <div className="flex items-start gap-2">
+                    <Printer className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                    <div>
+                      <span>Cetak Struk Otomatis</span>
+                      <p className="text-[10px] text-zinc-400 font-normal">
+                        Default Nonaktif: Struk hanya dicetak bila pembeli meminta (hemat kertas thermal).
+                      </p>
+                    </div>
                   </div>
                   <input
                     type="checkbox"
@@ -862,14 +1030,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
 
                   <div className="flex items-center">
-                    <label className="flex items-center gap-2.5 text-xs font-black text-zinc-950 dark:text-zinc-200 cursor-pointer select-none">
+                    <label className="flex items-start gap-2.5 text-xs font-black text-zinc-950 dark:text-zinc-200 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={storeForm.autoPrintReceipt}
                         onChange={(e) => setStoreForm((p) => ({ ...p, autoPrintReceipt: e.target.checked }))}
-                        className="w-4 h-4 rounded text-purple-600 border-zinc-300 focus:ring-purple-500 accent-purple-600"
+                        className="w-4 h-4 rounded text-purple-600 border-zinc-300 focus:ring-purple-500 accent-purple-600 mt-0.5"
                       />
-                      <span>Cetak struk otomatis saat pembayaran selesai</span>
+                      <div>
+                        <span>Cetak struk otomatis saat pembayaran selesai</span>
+                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-normal">
+                          (Default: Nonaktif — hemat kertas &amp; struk hanya dicetak manual bila diminta)
+                        </p>
+                      </div>
                     </label>
                   </div>
                 </div>
@@ -916,257 +1089,123 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: QRIS MERCHANT */}
+          {/* TAB 3: QRIS PEMBAYARAN (FOTO QRIS SENDIRI) */}
           {activeTab === 'QRIS' && (
             <div className="space-y-6">
               {/* Header Info Banner */}
-              <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-900 dark:text-pink-300 space-y-1.5">
+              <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-900 dark:text-purple-300 space-y-1.5">
                 <div className="font-extrabold text-sm flex items-center gap-2">
                   <QrCode className="w-5 h-5 text-purple-600 dark:text-pink-400" />
-                  <span>Pengaturan QRIS Toko Kelontong</span>
+                  <span>Pengaturan QRIS Pembayaran Toko</span>
                 </div>
-                <p className="opacity-90 leading-relaxed text-slate-600 dark:text-slate-300">
-                  Pilih cara Anda menampilkan kode QRIS kepada pembeli di kasir. Anda bisa menggunakan sistem <strong>QRIS Dinamis Otomatis</strong> (nominal harga pas otomatis muncul di HP pembeli) atau <strong>Unggah Foto/Gambar QRIS Toko Anda</strong> sendiri.
+                <p className="opacity-90 leading-relaxed text-zinc-700 dark:text-zinc-300">
+                  Gunakan foto atau gambar stiker QRIS resmi toko Anda (dari BCA, Mandiri, BRI, BNI, GoPay, OVO, DANA, ShopeePay, dll). Foto QRIS ini akan langsung ditampilkan di layar kasir saat kasir memilih metode pembayaran QRIS agar pembeli dapat langsung scan.
                 </p>
               </div>
 
-              {/* Mode Selector Buttons */}
-              <div>
-                <label className="block text-xs font-black text-zinc-950 dark:text-zinc-200 mb-2">
-                  Pilih Metode QRIS yang Ingin Digunakan:
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Option 1: Dynamic NMID */}
-                  <button
-                    type="button"
-                    onClick={() => setStoreForm((prev) => ({ ...prev, qrisMode: 'DYNAMIC_NMID' }))}
-                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between relative ${
-                      (storeForm.qrisMode || 'DYNAMIC_NMID') === 'DYNAMIC_NMID'
-                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 shadow-xs ring-2 ring-purple-500/30'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="p-2 rounded-xl bg-purple-500/10 text-purple-700 dark:text-pink-400 mb-2">
-                        <Sparkles className="w-5 h-5" />
-                      </div>
-                      {(storeForm.qrisMode || 'DYNAMIC_NMID') === 'DYNAMIC_NMID' && (
-                        <span className="flex items-center gap-1 text-[10px] font-black bg-purple-600 text-white px-2 py-0.5 rounded-full">
-                          <Check className="w-3 h-3" /> Aktif
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-zinc-950 dark:text-white">
-                        1. QRIS Dinamis (Rekomendasi)
-                      </div>
-                      <p className="text-[11px] text-zinc-700 dark:text-zinc-300 mt-1 leading-snug font-medium">
-                        Gunakan Nama Merchant &amp; NMID toko Anda. Barcode QR otomatis mengisi nominal belanja di HP pembeli.
-                      </p>
-                    </div>
-                  </button>
-
-                  {/* Option 2: Upload Custom Image */}
-                  <button
-                    type="button"
-                    onClick={() => setStoreForm((prev) => ({ ...prev, qrisMode: 'CUSTOM_IMAGE' }))}
-                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between relative ${
-                      storeForm.qrisMode === 'CUSTOM_IMAGE'
-                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 shadow-xs ring-2 ring-purple-500/30'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="p-2 rounded-xl bg-pink-500/10 text-pink-700 dark:text-pink-400 mb-2">
-                        <ImageIcon className="w-5 h-5" />
-                      </div>
-                      {storeForm.qrisMode === 'CUSTOM_IMAGE' && (
-                        <span className="flex items-center gap-1 text-[10px] font-black bg-pink-600 text-white px-2 py-0.5 rounded-full">
-                          <Check className="w-3 h-3" /> Aktif
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-zinc-950 dark:text-white">
-                        2. Unggah Foto QRIS Toko Sendiri
-                      </div>
-                      <p className="text-[11px] text-zinc-700 dark:text-zinc-300 mt-1 leading-snug font-medium">
-                        Upload foto stiker QRIS atau screenshot dari BCA/BRI/GoPay/DANA/ShopeePay milik toko Anda.
-                      </p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Main Content Area based on Selected Mode */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                {/* Left Side: Form inputs */}
+                {/* Left Side: Upload & Store Label */}
                 <div className="lg:col-span-7 space-y-4">
-                  {/* MODE 1: DYNAMIC NMID FORM */}
-                  {(storeForm.qrisMode || 'DYNAMIC_NMID') === 'DYNAMIC_NMID' && (
-                    <div className="space-y-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xs">
-                      <div>
-                        <label className="block text-xs font-black text-zinc-950 dark:text-zinc-200 mb-1">
-                          Nama Merchant QRIS (Tampil di HP Pelanggan):
-                        </label>
-                        <input
-                          type="text"
-                          value={storeForm.qrisMerchantName}
-                          onChange={(e) => setStoreForm({ ...storeForm, qrisMerchantName: e.target.value })}
-                          placeholder="Contoh: TOKO KELONTONG BERKAH"
-                          className="w-full px-3 py-2 rounded-xl border text-xs font-black uppercase text-zinc-950 dark:text-white bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                        <span className="text-[10px] text-zinc-600 dark:text-zinc-400 mt-0.5 block font-medium">
-                          Nama toko Anda seperti yang terdaftar di bank/penyedia QRIS
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-black text-zinc-950 dark:text-zinc-200 mb-1 font-mono">
-                            NMID Merchant (National Merchant ID):
-                          </label>
-                          <input
-                            type="text"
-                            value={storeForm.qrisNmid}
-                            onChange={(e) => setStoreForm({ ...storeForm, qrisNmid: e.target.value.trim() })}
-                            placeholder="Contoh: ID1020038920192"
-                            className="w-full px-3 py-2 rounded-xl border text-xs font-mono font-bold bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
-                            Kota Toko (City):
-                          </label>
-                          <input
-                            type="text"
-                            value={storeForm.qrisCity || 'JAKARTA'}
-                            onChange={(e) => setStoreForm({ ...storeForm, qrisCity: e.target.value.toUpperCase() })}
-                            placeholder="Contoh: JAKARTA / SURABAYA"
-                            className="w-full px-3 py-2 rounded-xl border text-xs uppercase bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Explanation where to find NMID */}
-                      <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-slate-700 dark:text-amber-200 text-xs space-y-2">
-                        <div className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
-                          <HelpCircle className="w-4 h-4 text-amber-500 shrink-0" />
-                          <span>Di Mana Saya Bisa Menemukan NMID Toko Saya?</span>
-                        </div>
-                        <p className="text-[11px] leading-relaxed opacity-95">
-                          1. Buka <strong>stiker atau kertas cetak QRIS</strong> resmi toko Anda (dari BCA, Mandiri, BRI, GoPay, ShopeePay, DANA, OVO, dll).
-                        </p>
-                        <p className="text-[11px] leading-relaxed opacity-95">
-                          2. Perhatikan bagian bawah gambar barcode QRIS. Terdapat tulisan <strong>NMID: ID...</strong> (contoh: <code>ID1020038920192</code> atau <code>ID20...</code>).
-                        </p>
-                        <p className="text-[11px] leading-relaxed opacity-95">
-                          3. Salin/ketik kode <strong>NMID</strong> tersebut ke kolom di atas, lalu klik <strong>Simpan Konfigurasi QRIS</strong>.
-                        </p>
-                      </div>
+                  <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-4 shadow-2xs">
+                    <div>
+                      <label className="block text-xs font-black text-zinc-950 dark:text-zinc-200 mb-1">
+                        Nama Toko / Nama Merchant QRIS:
+                      </label>
+                      <input
+                        type="text"
+                        value={storeForm.qrisMerchantName || ''}
+                        onChange={(e) => setStoreForm({ ...storeForm, qrisMerchantName: e.target.value })}
+                        placeholder="Contoh: AGEN MINI ATM & KONTER BERKAH"
+                        className="w-full px-3 py-2.5 rounded-xl border text-xs font-black uppercase bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-800 text-zinc-950 dark:text-white placeholder-zinc-400 focus:outline-hidden focus:border-purple-500 shadow-2xs"
+                      />
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 block font-medium">
+                        Nama ini akan tercantum di bawah foto barcode QRIS pada layar pembayaran kasir.
+                      </span>
                     </div>
-                  )}
 
-                  {/* MODE 2: CUSTOM IMAGE UPLOAD FORM */}
-                  {storeForm.qrisMode === 'CUSTOM_IMAGE' && (
-                    <div className="space-y-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
-                          Nama Label Toko:
-                        </label>
-                        <input
-                          type="text"
-                          value={storeForm.qrisMerchantName}
-                          onChange={(e) => setStoreForm({ ...storeForm, qrisMerchantName: e.target.value })}
-                          placeholder="TOKO KELONTONG BERKAH"
-                          className="w-full px-3 py-2 rounded-xl border text-xs font-bold uppercase bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-xs font-black text-zinc-950 dark:text-zinc-200 mb-2">
+                        Unggah File Foto / Gambar QRIS Toko Anda:
+                      </label>
 
-                      <div>
-                        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                          Upload File Foto / Gambar QRIS Toko Anda:
-                        </label>
-                        
-                        {storeForm.qrisImageUrl ? (
-                          <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-500/40 bg-emerald-50/30 dark:bg-emerald-950/20 flex flex-col sm:flex-row items-center gap-4">
-                            <div className="w-24 h-24 bg-white p-1 rounded-xl shadow-md border border-slate-200 shrink-0 flex items-center justify-center overflow-hidden">
-                              <img
-                                src={storeForm.qrisImageUrl}
-                                alt="Pratinjau QRIS"
-                                className="max-w-full max-h-full object-contain"
-                              />
+                      {storeForm.qrisImageUrl ? (
+                        <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-950/20 flex flex-col sm:flex-row items-center gap-4">
+                          <div className="w-24 h-24 bg-white p-1 rounded-xl shadow-md border border-zinc-200 shrink-0 flex items-center justify-center overflow-hidden">
+                            <img
+                              src={storeForm.qrisImageUrl}
+                              alt="Foto QRIS Toko"
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </div>
+                          <div className="space-y-2 text-center sm:text-left flex-1">
+                            <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center justify-center sm:justify-start gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                              <span>Foto QRIS Berhasil Terpasang</span>
                             </div>
-                            <div className="space-y-2 text-center sm:text-left flex-1">
-                              <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center justify-center sm:justify-start gap-1">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                <span>Gambar QRIS Berhasil Terpasang</span>
-                              </div>
-                              <p className="text-[11px] text-slate-500">
-                                Gambar ini akan langsung tampil saat Anda memilih pembayaran QRIS di kasir.
-                              </p>
-                              <div className="flex items-center gap-2 justify-center sm:justify-start pt-1">
-                                <label className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5">
-                                  <FileUp className="w-3.5 h-3.5" />
-                                  <span>Ganti Foto</span>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleQrisImageUpload}
-                                    className="hidden"
-                                  />
-                                </label>
-                                <button
-                                  type="button"
-                                  onClick={handleRemoveQrisImage}
-                                  className="px-3 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  <span>Hapus</span>
-                                </button>
-                              </div>
+                            <p className="text-[11px] text-zinc-600 dark:text-zinc-400">
+                              Foto ini siap ditampilkan kepada pelanggan di layar saat memilih pembayaran QRIS di kasir.
+                            </p>
+                            <div className="flex items-center gap-2 justify-center sm:justify-start pt-1">
+                              <label className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-sm">
+                                <FileUp className="w-3.5 h-3.5" />
+                                <span>Ganti Foto</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleQrisImageUpload}
+                                  className="hidden"
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={handleRemoveQrisImage}
+                                className="px-3.5 py-1.5 rounded-xl border border-rose-300 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-black cursor-pointer transition-colors inline-flex items-center gap-1.5"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Hapus Foto</span>
+                              </button>
                             </div>
                           </div>
-                        ) : (
-                          <label className="border-2 border-dashed border-purple-300 dark:border-purple-800/80 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-purple-50/50 dark:hover:bg-purple-950/20 transition-all group">
-                            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-pink-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                              <FileUp className="w-6 h-6" />
-                            </div>
-                            <span className="text-xs font-black text-slate-800 dark:text-slate-200 mb-1">
-                              Klik Di Sini Untuk Pilih Foto QRIS Toko Anda
-                            </span>
-                            <span className="text-[11px] text-slate-400 max-w-xs">
-                              Format file JPG, PNG, atau WebP (Maksimal 3MB). Bisa berupa foto stiker QRIS atau screenshot dari aplikasi bank.
-                            </span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleQrisImageUpload}
-                              className="hidden"
-                            />
-                          </label>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <label className="border-2 border-dashed border-purple-300 dark:border-purple-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-purple-50/50 dark:hover:bg-purple-950/20 transition-all group bg-white dark:bg-zinc-900">
+                          <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-pink-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <FileUp className="w-6 h-6" />
+                          </div>
+                          <span className="text-xs font-black text-zinc-900 dark:text-white mb-1">
+                            Klik Di Sini Untuk Memilih Foto QRIS Toko Anda
+                          </span>
+                          <span className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
+                            Format file JPG, PNG, atau WebP (Maksimal 3MB). Bisa berupa foto stiker cetak QRIS atau screenshot dari BCA/BRI/Mandiri/GoPay/DANA/ShopeePay.
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleQrisImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Right Side: Live Test Preview */}
+                {/* Right Side: Live Cashier Preview */}
                 <div className="lg:col-span-5 flex flex-col items-center">
-                  <div className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col items-center text-center">
-                    <div className="text-[10px] font-black tracking-widest text-slate-500 uppercase mb-2 font-mono flex items-center gap-1">
+                  <div className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex flex-col items-center text-center">
+                    <div className="text-[10px] font-black tracking-widest text-zinc-500 uppercase mb-2 font-mono flex items-center gap-1.5">
                       <Eye className="w-3.5 h-3.5 text-purple-500" />
-                      <span>PRATINJAU LANGSUNG QRIS</span>
+                      <span>PRATINJAU LANGSUNG DI KASIR</span>
                     </div>
 
                     {/* QR Preview Frame */}
-                    <div className="bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-inner flex flex-col items-center max-w-[200px] w-full my-2">
-                      <div className="text-[9px] font-black tracking-widest text-slate-700 uppercase mb-1 font-mono">
-                        QRIS INDONESIA
+                    <div className="bg-white p-3 rounded-2xl border-2 border-zinc-200 dark:border-zinc-300 shadow-inner flex flex-col items-center max-w-[220px] w-full my-2">
+                      <div className="text-[9px] font-black tracking-widest text-zinc-800 uppercase mb-1.5 font-mono">
+                        QRIS RESMI TOKO
                       </div>
 
-                      {storeForm.qrisMode === 'CUSTOM_IMAGE' && storeForm.qrisImageUrl ? (
-                        <div className="w-[150px] h-[150px] flex items-center justify-center overflow-hidden bg-white">
+                      {storeForm.qrisImageUrl ? (
+                        <div className="w-[170px] h-[170px] flex items-center justify-center overflow-hidden bg-white p-1">
                           <img
                             src={storeForm.qrisImageUrl}
                             alt="Preview QRIS"
@@ -1174,44 +1213,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           />
                         </div>
                       ) : (
-                        <QRCodeSVG
-                          value={generateDynamicQRIS({
-                            merchantName: storeForm.qrisMerchantName || 'TOKO KELONTONG BERKAH',
-                            merchantCity: storeForm.qrisCity || 'JAKARTA',
-                            nmid: storeForm.qrisNmid || 'ID1020038920192',
-                            amount: 25000,
-                            invoiceNumber: 'INV-TEST-001',
-                          })}
-                          size={150}
-                          level="M"
-                          includeMargin={false}
-                        />
+                        <div className="w-[170px] h-[170px] flex flex-col items-center justify-center p-3 text-center bg-zinc-50 rounded-xl border border-dashed border-zinc-300">
+                          <ImageIcon className="w-8 h-8 text-zinc-400 mb-1.5" />
+                          <span className="text-[11px] font-black text-zinc-700">Foto QRIS Belum Ada</span>
+                          <span className="text-[9px] text-zinc-500 mt-0.5">Unggah foto di samping kiri</span>
+                        </div>
                       )}
 
-                      <div className="text-[9px] font-bold font-mono text-slate-600 mt-1 truncate max-w-full">
-                        {storeForm.qrisMerchantName || 'TOKO KELONTONG BERKAH'}
-                      </div>
-                      <div className="text-[8px] font-mono text-slate-400 truncate max-w-full">
-                        {storeForm.qrisNmid ? `NMID: ${storeForm.qrisNmid}` : 'NMID: ID1020038920192'}
+                      <div className="text-[10px] font-black font-mono text-zinc-900 mt-2 truncate max-w-full px-1">
+                        {storeForm.qrisMerchantName || storeForm.storeName || 'NAMA TOKO ANDA'}
                       </div>
                     </div>
 
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 px-2 leading-relaxed">
-                      <span className="font-bold text-purple-600 dark:text-pink-400">💡 Uji Scan Langsung:</span> Anda dapat mencoba scan barcode di atas sekarang menggunakan kamera aplikasi m-banking atau e-wallet di HP Anda untuk memastikan rekening toko sudah benar.
+                    <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-2 px-2 leading-relaxed">
+                      <span className="font-bold text-purple-600 dark:text-pink-400">💡 Tampilan Kasir:</span> Pelanggan akan melihat foto QRIS di atas pada saat transaksi untuk pembayaran non-tunai.
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Save Button */}
-              <div className="pt-3 flex justify-end border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-3 flex justify-end border-t border-zinc-200 dark:border-zinc-800">
                 <button
                   type="button"
                   onClick={handleSaveStoreSettings}
                   className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black text-xs rounded-xl shadow-lg tracking-wide cursor-pointer transition-all active:scale-95 flex items-center gap-2"
                 >
                   <Check className="w-4 h-4" />
-                  <span>Simpan Konfigurasi QRIS Toko</span>
+                  <span>Simpan Pengaturan QRIS Toko</span>
                 </button>
               </div>
             </div>
@@ -1561,37 +1590,301 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           )}
 
-          {/* TAB 5: SINKRONISASI AWAN & PEMISAHAN DATABASE TOKO */}
+          {/* TAB 5: FORM SETUP DATABASE MANDIRI & SINKRONISASI CLOUD (TIPS NOMOR 3) */}
           {activeTab === 'CLOUD' && (
-            <div className="space-y-4">
-              {/* Info Card */}
-              <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-300 space-y-2">
-                <div className="font-extrabold flex items-center gap-2 text-amber-400">
-                  <Cloud className="w-5 h-5 text-amber-400" />
-                  <span className="text-sm">Pemisahan Database &amp; Sinkronisasi Cloud</span>
+            <div className="space-y-5">
+              {/* 1. Real-time Connection Status Banner */}
+              <div
+                className={`p-4 rounded-2xl border transition-all ${
+                  activeFbInfo.isCustom && activeFbInfo.isEnabled
+                    ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                    : 'bg-zinc-950 border-zinc-800 text-zinc-300'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                        activeFbInfo.isCustom && activeFbInfo.isEnabled
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                      }`}
+                    >
+                      <Database className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black tracking-wide uppercase text-white">
+                          Status Database Cloud:
+                        </span>
+                        {activeFbInfo.isCustom && activeFbInfo.isEnabled ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1.5 animate-pulse">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                            🟢 Tersambung ke Cloud Mandiri
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-zinc-800 text-zinc-400 border border-zinc-700 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-zinc-400" />
+                            ⚪ Mode Offline Lokal (Aman di Perangkat)
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                        {activeFbInfo.isCustom && activeFbInfo.isEnabled ? (
+                          <>
+                            Aplikasi aktif terhubung ke Google Firebase proyek:{' '}
+                            <strong className="text-emerald-400 font-mono font-bold">
+                              {activeFbInfo.projectId}
+                            </strong>
+                            . Seluruh transaksi kasir dicadangkan ke database milik toko ini secara otomatis.
+                          </>
+                        ) : (
+                          <>
+                            Aplikasi saat ini berjalan dalam <strong>Mode Offline Lokal murni</strong>. Seluruh data transaksi, kasbon, dan produk tersimpan 100% aman di memori perangkat ini (IndexedDB &amp; LocalStorage).
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {activeFbInfo.isCustom && activeFbInfo.isEnabled && (
+                    <button
+                      type="button"
+                      onClick={handleDisconnectToLocalOffline}
+                      className="px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white text-xs font-bold shrink-0 cursor-pointer transition-all active:scale-95"
+                    >
+                      Putuskan Koneksi (Kembali ke Offline)
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 2. Educational Value & Logic Explanation (Tips Nomor 3) */}
+              <div className="p-4 rounded-2xl bg-zinc-950 border border-amber-500/30 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="font-extrabold flex items-center gap-2 text-amber-400 text-xs">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>Fitur Setup Database Mandiri (1 Aplikasi Untuk Semua Toko)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowGuideTips(!showGuideTips)}
+                    className="text-[11px] text-amber-400 hover:underline flex items-center gap-1 font-bold cursor-pointer"
+                  >
+                    <span>{showGuideTips ? 'Tutup Panduan' : 'Lihat Cara Bikin Firebase (3 Menit)'}</span>
+                    {showGuideTips ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
                 <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  Agar data <strong>Toko A tidak tercampur dengan Toko B</strong> saat Anda menjual aplikasi ini ke banyak toko, setiap toko memiliki <strong>Kode Toko (Store ID)</strong> uniknya sendiri. Database cloud akan memisahkan folder penyimpanan secara otomatis.
+                  Dengan fitur ini, Anda <strong>cukup memelihara 1 master aplikasi kasir tunggal</strong>. Saat menjual ke Toko A, Toko B, atau Agen Mini ATM lain, Anda <em>tidak perlu repot ganti kodingan, build ulang, atau sewa banyak hosting</em>. Cukup masukkan konfigurasi Firebase milik toko di bawah ini, klik <strong>Tes &amp; Sambungkan</strong>, dan database toko langsung terpisah secara mandiri!
                 </p>
-                <div className="flex flex-wrap gap-2 pt-1 font-mono text-[10px]">
-                  <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold">
-                    ✓ Terisolasi Per-Toko
+
+                {/* Collapsible Step-by-Step Guide for Firebase Console */}
+                {showGuideTips && (
+                  <div className="pt-3 border-t border-zinc-800/80 space-y-3 text-xs">
+                    <div className="text-[11px] font-black uppercase text-amber-300 font-mono tracking-wider">
+                      Langkah 3 Menit Membuat Database Gratis di Google Firebase:
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-1">
+                        <div className="text-amber-400 font-black text-xs">1. Buat Proyek</div>
+                        <p className="text-[11px] text-zinc-400 leading-snug">
+                          Buka <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-amber-400 underline inline-flex items-center gap-0.5">console.firebase.google.com <ExternalLink className="w-3 h-3" /></a> dengan akun Google. Klik <strong>Add Project</strong> (misal: <em>sembako-barokah</em>).
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-1">
+                        <div className="text-amber-400 font-black text-xs">2. Buat Firestore DB</div>
+                        <p className="text-[11px] text-zinc-400 leading-snug">
+                          Masuk menu <strong>Firestore Database</strong> &gt; Klik <strong>Create database</strong> &gt; Pilih lokasi (misal: <em>asia-southeast1 / Jakarta</em>) &gt; Pilih <strong>Start in test mode</strong> &gt; Selesai.
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-1">
+                        <div className="text-amber-400 font-black text-xs">3. Salin Konfigurasi Web</div>
+                        <p className="text-[11px] text-zinc-400 leading-snug">
+                          Klik ikon <strong>&lt;/&gt; (Web App)</strong> di dashboard proyek &gt; Salin kode <code className="text-amber-300">firebaseConfig</code> &gt; Tempel ke kotak di bawah ini!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Quick Paste & Auto-Extraction Area */}
+              <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-white flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-purple-400" />
+                    <span>Metode Cepat: Tempel (Paste) Kode Konfigurasi Firebase dari Google</span>
+                  </label>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/30 font-bold">
+                    Otomatis Ekstrak
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700 font-bold">
-                    ✓ Multi-Kasir Real-time
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700 font-bold">
-                    ✓ Tetap Berjalan Saat Offline
+                </div>
+
+                <div className="space-y-2">
+                  <textarea
+                    rows={4}
+                    value={firebaseSnippetInput}
+                    onChange={(e) => handleSnippetPaste(e.target.value)}
+                    placeholder={`Tempel teks konfigurasi dari Firebase Console di sini...\nContoh:\nconst firebaseConfig = {\n  apiKey: "AIzaSyD-example...",\n  projectId: "toko-barokah",\n  appId: "1:1055880338253:web:28c3..."\n};`}
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-300 placeholder-zinc-500 focus:outline-hidden focus:border-purple-500"
+                  />
+                  <span className="text-[10px] text-zinc-500 block leading-tight">
+                    💡 Sistem otomatis membaca dan mengekstrak API Key, Project ID, dan App ID tanpa perlu mengetik manual.
                   </span>
                 </div>
               </div>
 
-              {/* Multi-Tenant Store ID Config */}
-              <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950 space-y-3">
-                <h4 className="font-bold text-xs text-white flex items-center gap-2">
-                  <Key className="w-4 h-4 text-amber-400" />
-                  <span>Kode Lisensi / ID Database Toko Ini:</span>
-                </h4>
+              {/* 4. Structured Form Fields */}
+              <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                  <h4 className="font-black text-xs text-white flex items-center gap-2">
+                    <Server className="w-4 h-4 text-amber-400" />
+                    <span>Rincian Konfigurasi Database Toko Ini:</span>
+                  </h4>
+                  <span className="text-[10px] text-zinc-400 font-mono">
+                    Tersimpan di Penyimpanan Lokal Perangkat Toko (LocalStorage)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-black text-zinc-300 mb-1">
+                      Project ID Google Firebase: <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={fbProjectId}
+                      onChange={(e) => setFbProjectId(e.target.value.trim())}
+                      placeholder="Contoh: sembako-barokah-app"
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-amber-400 font-mono font-bold placeholder-zinc-500 focus:outline-hidden focus:border-amber-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-black text-zinc-300 mb-1">
+                      Web App ID: <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={fbAppId}
+                      onChange={(e) => setFbAppId(e.target.value.trim())}
+                      placeholder="Contoh: 1:123456789:web:abcdef123"
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 font-mono text-[11px] placeholder-zinc-500 focus:outline-hidden focus:border-amber-500"
+                      required
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-black text-zinc-300 mb-1">
+                      API Key (Web API Key): <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={fbApiKey}
+                      onChange={(e) => setFbApiKey(e.target.value.trim())}
+                      placeholder="Contoh: AIzaSyApZ9y1D0RiXkSdk..."
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 font-mono text-[11px] placeholder-zinc-500 focus:outline-hidden focus:border-amber-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-black text-zinc-400 mb-1">
+                      Auth Domain (Opsional):
+                    </label>
+                    <input
+                      type="text"
+                      value={fbAuthDomain}
+                      onChange={(e) => setFbAuthDomain(e.target.value.trim())}
+                      placeholder={fbProjectId ? `${fbProjectId}.firebaseapp.com` : 'nama-project.firebaseapp.com'}
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[11px] placeholder-zinc-600 focus:outline-hidden focus:border-zinc-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-black text-zinc-400 mb-1">
+                      Storage Bucket (Opsional):
+                    </label>
+                    <input
+                      type="text"
+                      value={fbStorageBucket}
+                      onChange={(e) => setFbStorageBucket(e.target.value.trim())}
+                      placeholder={fbProjectId ? `${fbProjectId}.appspot.com` : 'nama-project.appspot.com'}
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[11px] placeholder-zinc-600 focus:outline-hidden focus:border-zinc-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Test Result Feedback Box */}
+                {fbTestResult && (
+                  <div
+                    className={`p-3.5 rounded-xl border flex items-start gap-2.5 text-xs font-semibold ${
+                      fbTestResult.success
+                        ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
+                        : 'bg-rose-950/40 border-rose-500/50 text-rose-300'
+                    }`}
+                  >
+                    {fbTestResult.success ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1">
+                      <div className="font-bold">
+                        {fbTestResult.success ? 'Uji Koneksi Berhasil!' : 'Uji Koneksi Gagal'}
+                      </div>
+                      <div className="text-[11px] mt-0.5 opacity-90 leading-relaxed font-normal">
+                        {fbTestResult.message}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons: Test Connection & Save */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800/80">
+                  <button
+                    type="button"
+                    onClick={handleTestFirebaseConnection}
+                    disabled={isTestingFb || !fbProjectId || !fbApiKey}
+                    className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs flex items-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed border border-zinc-700"
+                  >
+                    {isTestingFb ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                        <span>Menguji Sambungan ke Google...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-3.5 h-3.5 text-amber-400" />
+                        <span>🧪 Tes Sambungan Database</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSaveAndConnectFirebase}
+                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-black text-xs flex items-center gap-2 shadow-lg cursor-pointer transition-all active:scale-95"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>💾 Simpan &amp; Sambungkan Database Toko</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Store ID & Multi-Tenant Isolation */}
+              <div className="p-4 rounded-2xl border border-zinc-800 bg-zinc-950 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-xs text-white flex items-center gap-2">
+                    <Key className="w-4 h-4 text-amber-400" />
+                    <span>Kode Lisensi Toko / Sub-Folder Cloud:</span>
+                  </h4>
+                  <span className="text-[10px] text-zinc-500 font-mono">Multi-Tenant Store ID</span>
+                </div>
                 <div className="space-y-2">
                   <input
                     type="text"
@@ -1602,18 +1895,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         storeId: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '_'),
                       })
                     }
-                    placeholder="Contoh: toko_berkah_01"
+                    placeholder="Contoh: toko_barokah_01"
                     className="w-full px-3 py-2.5 rounded-xl border text-xs font-mono font-bold bg-zinc-900 border-zinc-800 text-amber-400 focus:outline-hidden focus:border-amber-500"
                   />
                   <p className="text-[11px] text-zinc-400 leading-relaxed">
-                    Ubah kode ini untuk setiap toko yang membeli (misal: <code className="text-amber-400">toko_01</code>, <code className="text-amber-400">toko_02</code>, dst).
+                    Kode ini memastikan database terorganisir per toko (misal: <code className="text-amber-400">toko_barokah_01</code>, <code className="text-amber-400">konter_cell_02</code>).
                   </p>
                 </div>
 
                 {/* Direct Link Generator */}
                 <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800 space-y-1.5">
                   <div className="text-[10px] font-mono font-bold text-zinc-400 uppercase">
-                    Link Akses Khusus Toko Ini (Bisa Dibagikan ke HP Kasir Toko):
+                    Link Akses Langsung Khusus Toko Ini (Bisa Dibuka di HP Kasir):
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -1643,62 +1936,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                 </div>
 
-                {/* Cloud Sync Toggle */}
+                {/* Manual Push Button */}
                 <div className="pt-2 border-t border-zinc-800/80">
-                  <label className="flex items-center justify-between cursor-pointer text-xs font-semibold text-zinc-200">
-                    <div>
-                      <div className="font-bold flex items-center gap-1.5">
-                        <span>Aktifkan Sinkronisasi Cloud Firestore</span>
-                        {!storeForm.enableCloudSync && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
-                            Default: Mode Offline Aktif
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-zinc-400 font-normal">
-                        Bawaan aplikasi disetel ke <strong>Mode Offline Mandiri</strong> agar data tiap toko 100% aman di HP masing-masing tanpa takut tertukar.
-                      </div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={!!storeForm.enableCloudSync}
-                      onChange={(e) => setStoreForm({ ...storeForm, enableCloudSync: e.target.checked })}
-                      className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
-                    />
-                  </label>
-                </div>
-
-                <div className="pt-2 flex justify-end">
                   <button
                     type="button"
-                    onClick={() => {
-                      onSaveSettings(storeForm);
-                      sound.playSuccess();
-                      setStatusMsg({ text: 'Konfigurasi cloud toko berhasil disimpan!', type: 'success' });
-                      setTimeout(() => setStatusMsg(null), 3000);
-                    }}
-                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs rounded-xl shadow-md cursor-pointer transition-all active:scale-95"
+                    onClick={handleCloudSync}
+                    disabled={isSyncing}
+                    className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-xs rounded-xl border border-zinc-700 flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
-                    Simpan Pengaturan Cloud
+                    <CloudUpload className="w-4 h-4 text-amber-400" />
+                    <span>{isSyncing ? 'Sedang Menyinkronkan...' : 'Unggah Paksa Cadangan Saat Ini ke Cloud'}</span>
                   </button>
                 </div>
-              </div>
-
-              {/* Manual Push */}
-              <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950 space-y-2">
-                <h4 className="font-bold text-xs text-white">Sinkronkan Manual ke Cloud</h4>
-                <p className="text-[11px] text-zinc-400">
-                  Secara bawaan data tersinkron otomatis. Anda dapat menekan tombol ini untuk mengunggah paksa data lokal saat ini:
-                </p>
-                <button
-                  type="button"
-                  onClick={handleCloudSync}
-                  disabled={isSyncing}
-                  className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-xs rounded-xl border border-zinc-700 flex items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  <CloudUpload className="w-4 h-4 text-amber-400" />
-                  <span>{isSyncing ? 'Sedang Menyinkronkan...' : 'Unggah Cadangan ke Cloud'}</span>
-                </button>
               </div>
             </div>
           )}

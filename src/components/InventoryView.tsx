@@ -26,12 +26,18 @@ import { BarcodeScannerModal } from './BarcodeScannerModal';
 import { ProductImageUploader } from './ProductImageUploader';
 
 const ALL_CATEGORIES: ProductCategory[] = [
-  'Layanan Mini ATM',
   'Pulsa & Paket Data',
+  'Layanan Mini ATM',
   'Top Up E-Wallet',
   'Token & Listrik PLN',
   'Tagihan PPOB & BPJS',
-  'Kartu Perdana & Voucher',
+  'Cas & Charger',
+  'Voucher Fisik',
+  'Casing & Tempered Glass',
+  'Kabel Data',
+  'Flashdisk & Memori',
+  'Handphone & Audio',
+  'Kartu Perdana',
   'Aksesoris Handphone',
 ];
 

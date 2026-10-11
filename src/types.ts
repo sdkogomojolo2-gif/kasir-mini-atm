@@ -4,7 +4,13 @@ export type ProductCategory =
   | 'Top Up E-Wallet'
   | 'Token & Listrik PLN'
   | 'Tagihan PPOB & BPJS'
-  | 'Kartu Perdana & Voucher'
+  | 'Cas & Charger'
+  | 'Voucher Fisik'
+  | 'Casing & Tempered Glass'
+  | 'Kabel Data'
+  | 'Flashdisk & Memori'
+  | 'Handphone & Audio'
+  | 'Kartu Perdana'
   | 'Aksesoris Handphone'
   | string;
 
@@ -202,6 +208,16 @@ export interface BalanceMutation {
   cashierName: string;
 }
 
+export interface FirebaseCustomConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket?: string;
+  messagingSenderId?: string;
+  appId: string;
+  firestoreDatabaseId?: string;
+}
+
 export interface StoreSettings {
   storeId?: string; // ID Unik Toko / Tenant ID
   activeBranchId?: string; // Cabang yang sedang aktif dikelola
@@ -224,6 +240,8 @@ export interface StoreSettings {
   playAudioFeedback: boolean;
   encryptionEnabled: boolean;
   enableCloudSync?: boolean;
+  customFirebaseConfig?: FirebaseCustomConfig;
+  cloudSyncMode?: 'LOCAL_OFFLINE' | 'CUSTOM_FIREBASE';
   showSalesBrochure?: boolean;
   vaultKeyHash?: string;
 

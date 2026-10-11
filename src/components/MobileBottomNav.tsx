@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  LayoutDashboard,
   ShoppingCart,
   Package,
   BookOpen,
@@ -28,27 +29,27 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 }) => {
   const tabs = [
     {
+      id: 'dashboard' as TabType,
+      label: 'Beranda',
+      icon: LayoutDashboard,
+      badge: null,
+    },
+    {
       id: 'cashier' as TabType,
-      label: 'Kasir ATM',
+      label: 'Kasir',
       icon: ShoppingCart,
       badge: cartItemCount > 0 ? cartItemCount : null,
     },
     {
       id: 'branches' as TabType,
-      label: 'Cabang',
+      label: 'Uang Kas',
       icon: Building2,
       badge: null,
     },
     {
       id: 'inventory' as TabType,
-      label: 'Layanan',
+      label: 'Stok',
       icon: Package,
-      badge: null,
-    },
-    {
-      id: 'reports' as TabType,
-      label: 'Laporan',
-      icon: BarChart3,
       badge: null,
     },
   ];
