@@ -26,9 +26,9 @@ export default defineConfig(() => {
         includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
           id: '/',
-          name: 'Kasir-Q',
-          short_name: 'Kasir-Q',
-          description: 'Kasir-Q - Aplikasi kasir toko kelontong & manajemen stok modern offline-first.',
+          name: 'MINI ATM-Q',
+          short_name: 'MINI ATM-Q',
+          description: 'MINI ATM-Q - Aplikasi kasir agen mini ATM, konter pulsa & barang konter modern offline-first.',
           theme_color: '#10b981',
           background_color: '#0f172a',
           display: 'standalone',

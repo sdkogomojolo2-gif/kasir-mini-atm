@@ -32,11 +32,15 @@ interface TopHeaderProps {
 
 const TAB_TITLES: Record<TabType, { title: string; subtitle: string }> = {
   dashboard: {
-    title: 'Beranda',
+    title: 'Beranda Konter',
+    subtitle: '',
+  },
+  'digital-sales': {
+    title: 'Catat Penjualan Non-Fisik (Pulsa & Layanan)',
     subtitle: '',
   },
   cashier: {
-    title: 'Kasir & Transaksi',
+    title: 'Catat Penjualan Fisik (Barang Konter)',
     subtitle: '',
   },
   branches: {

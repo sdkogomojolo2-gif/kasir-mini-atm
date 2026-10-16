@@ -19,6 +19,7 @@ import {
   X,
   Sparkles,
   ChevronUp,
+  ChevronDown,
   CreditCard,
   ArrowDownLeft,
   ArrowUpRight,
@@ -39,7 +40,6 @@ import {
   CashierUser,
   Transaction,
   StoreBranch,
-  ServiceType,
   PaymentMethod,
 } from '../types';
 import { formatRupiah } from '../services/export';
@@ -47,62 +47,34 @@ import { sound } from '../services/sound';
 import { CheckoutModal } from './CheckoutModal';
 import { BarcodeScannerModal } from './BarcodeScannerModal';
 import { ProductImageUploader } from './ProductImageUploader';
-import { MiniATMTransactionModal } from './MiniATMTransactionModal';
-import { QuickFeeCalculatorModal } from './QuickFeeCalculatorModal';
+
+export const PHYSICAL_CATEGORIES: ProductCategory[] = [
+  'Cas & Charger',
+  'Casing & Tempered Glass',
+  'Kabel Data',
+  'Handphone & Audio',
+  'Flashdisk & Memori',
+  'Aksesoris Handphone',
+  'Kartu Perdana',
+  'Voucher Fisik',
+];
 
 const CATEGORIES: ('ALL' | ProductCategory)[] = [
   'ALL',
-  // Digital / Pencatatan HP
-  'Pulsa & Paket Data',
-  'Layanan Mini ATM',
-  'Top Up E-Wallet',
-  'Token & Listrik PLN',
-  'Tagihan PPOB & BPJS',
-  // Penjualan Fisik Konter HP
-  'Cas & Charger',
-  'Voucher Fisik',
-  'Casing & Tempered Glass',
-  'Kabel Data',
-  'Flashdisk & Memori',
-  'Handphone & Audio',
-  'Kartu Perdana',
-  'Aksesoris Handphone',
+  ...PHYSICAL_CATEGORIES,
 ];
 
 const CATEGORY_ICONS: Record<string, string> = {
-  'Layanan Mini ATM': '🏧',
-  'Pulsa & Paket Data': '📱',
-  'Top Up E-Wallet': '👛',
-  'Token & Listrik PLN': '⚡',
-  'Tagihan PPOB & BPJS': '🧾',
+  ALL: '🌟',
   'Cas & Charger': '🔌',
-  'Voucher Fisik': '🎟️',
   'Casing & Tempered Glass': '🛡️',
-  'Kabel Data': '🔌',
+  'Kabel Data': '⚡',
+  'Handphone & Audio': '🎧',
   'Flashdisk & Memori': '💾',
-  'Handphone & Audio': '📲',
+  'Aksesoris Handphone': '📦',
   'Kartu Perdana': '🪪',
-  'Aksesoris Handphone': '🎧',
+  'Voucher Fisik': '🎟️',
 };
-
-const DIGITAL_CATEGORIES = [
-  'Pulsa & Paket Data',
-  'Layanan Mini ATM',
-  'Top Up E-Wallet',
-  'Token & Listrik PLN',
-  'Tagihan PPOB & BPJS',
-];
-
-const PHYSICAL_CATEGORIES = [
-  'Cas & Charger',
-  'Voucher Fisik',
-  'Casing & Tempered Glass',
-  'Kabel Data',
-  'Flashdisk & Memori',
-  'Handphone & Audio',
-  'Kartu Perdana',
-  'Aksesoris Handphone',
-];
 
 interface CashierViewProps {
   products: Product[];
@@ -158,37 +130,33 @@ export const CashierView: React.FC<CashierViewProps> = ({
   const [scanToast, setScanToast] = useState<string | null>(null);
   const [isMobileCartDrawerOpen, setIsMobileCartDrawerOpen] = useState(false);
 
-  // Mini ATM & Konter Pulsa Modal State
-  const [isMiniATMModalOpen, setIsMiniATMModalOpen] = useState(false);
-  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
-  const [miniATMInitialService, setMiniATMInitialService] = useState<ServiceType>('TARIK_TUNAI');
-  const [miniATMPresetProvider, setMiniATMPresetProvider] = useState<string | undefined>(undefined);
-  const [miniATMPresetNominal, setMiniATMPresetNominal] = useState<number | undefined>(undefined);
-  const [selectedPulsaOperator, setSelectedPulsaOperator] = useState<string>('ALL');
-  const [categoryGroup, setCategoryGroup] = useState<'ALL' | 'DIGITAL' | 'FISIK'>(initialCategoryGroup || 'ALL');
+  // Category Dropdown State & Banner Visibility
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isBannerVisible, setIsBannerVisible] = useState(true);
+  const categoryDropdownRef = useRef<HTMLDivElement | null>(null);
 
+  // Close category dropdown on outside click
   useEffect(() => {
-    if (initialCategoryGroup) {
-      setCategoryGroup(initialCategoryGroup);
-    }
-  }, [initialCategoryGroup]);
-
-  const handleOpenMiniATM = (svc: ServiceType, provider?: string, nominal?: number) => {
-    setMiniATMInitialService(svc);
-    setMiniATMPresetProvider(provider);
-    setMiniATMPresetNominal(nominal);
-    setIsMiniATMModalOpen(true);
-    sound.playBeep(750, 0.04);
-  };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Search input ref for F2 shortcut
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Quick Register Modal State for Unrecognized Packaging Barcodes
+  // Quick Register Modal State for Physical Konter Items
   const [isQuickRegisterOpen, setIsQuickRegisterOpen] = useState(false);
   const [quickRegisterBarcode, setQuickRegisterBarcode] = useState('');
   const [quickName, setQuickName] = useState('');
-  const [quickCategory, setQuickCategory] = useState<ProductCategory>('Pulsa & Paket Data');
+  const [quickCategory, setQuickCategory] = useState<ProductCategory>('Cas & Charger');
   const [quickBuyPrice, setQuickBuyPrice] = useState<number>(0);
   const [quickSellPrice, setQuickSellPrice] = useState<number>(0);
   const [quickStock, setQuickStock] = useState<number>(20);
@@ -222,34 +190,47 @@ export const CashierView: React.FC<CashierViewProps> = ({
     setSelectedCartIds([]);
   };
 
-  // Filter products by group mode (from sidebar navigation) and search query
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      if (!p.isActive) return false;
+  // Helper: strictly identify physical products (excludes any digital/pulsa/mini ATM/token/e-wallet)
+  const isPhysicalProduct = (p: Product): boolean => {
+    if (p.serviceType && p.serviceType !== 'PRODUK_FISIK') return false;
+    const cat = (p.category || '').toLowerCase();
+    const isDigitalCat =
+      cat.includes('pulsa') ||
+      cat.includes('paket') ||
+      cat.includes('data') ||
+      cat.includes('atm') ||
+      cat.includes('tunai') ||
+      cat.includes('transfer') ||
+      cat.includes('wallet') ||
+      cat.includes('pln') ||
+      cat.includes('listrik') ||
+      cat.includes('ppob') ||
+      cat.includes('bpjs') ||
+      cat.includes('layanan');
+    return !isDigitalCat;
+  };
 
-      // Group Filter from Sidebar ("Pulsa & Layanan HP" vs "Barang Konter")
-      if (categoryGroup === 'DIGITAL') {
-        const isDigital =
-          (p.serviceType && p.serviceType !== 'PRODUK_FISIK') ||
-          DIGITAL_CATEGORIES.includes(p.category) ||
-          p.category.toLowerCase().includes('pulsa') ||
-          p.category.toLowerCase().includes('paket') ||
-          p.category.toLowerCase().includes('atm') ||
-          p.category.toLowerCase().includes('wallet') ||
-          p.category.toLowerCase().includes('pln') ||
-          p.category.toLowerCase().includes('ppob');
-        if (!isDigital) return false;
-      } else if (categoryGroup === 'FISIK') {
-        const isDigital =
-          (p.serviceType && p.serviceType !== 'PRODUK_FISIK') ||
-          DIGITAL_CATEGORIES.includes(p.category) ||
-          p.category.toLowerCase().includes('pulsa') ||
-          p.category.toLowerCase().includes('paket') ||
-          p.category.toLowerCase().includes('atm') ||
-          p.category.toLowerCase().includes('wallet') ||
-          p.category.toLowerCase().includes('pln') ||
-          p.category.toLowerCase().includes('ppob');
-        if (isDigital) return false;
+  // 100% strictly physical products list
+  const physicalProducts = useMemo(() => {
+    return products.filter((p) => p.isActive && isPhysicalProduct(p));
+  }, [products]);
+
+  // Real-time product counts per physical category
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      ALL: physicalProducts.length,
+    };
+    PHYSICAL_CATEGORIES.forEach((cat) => {
+      counts[cat] = physicalProducts.filter((p) => p.category === cat).length;
+    });
+    return counts;
+  }, [physicalProducts]);
+
+  // Filter physical products by selected category (Dropdown/Pills) and search query
+  const filteredProducts = useMemo(() => {
+    return physicalProducts.filter((p) => {
+      if (selectedCategory !== 'ALL' && p.category !== selectedCategory) {
+        return false;
       }
 
       const q = searchQuery.toLowerCase().trim();
@@ -258,11 +239,10 @@ export const CashierView: React.FC<CashierViewProps> = ({
       return (
         p.name.toLowerCase().includes(q) ||
         p.barcode.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        (p.provider && p.provider.toLowerCase().includes(q))
+        p.category.toLowerCase().includes(q)
       );
     });
-  }, [products, categoryGroup, searchQuery]);
+  }, [physicalProducts, selectedCategory, searchQuery]);
 
   // Fast add product to cart
   const handleAddToCart = (product: Product, qtyToAdd = 1) => {
@@ -659,8 +639,131 @@ export const CashierView: React.FC<CashierViewProps> = ({
         </div>
       )}
 
-      {/* Top Product Search Bar */}
-      <div className="flex items-center gap-2">
+      {/* 1. Banner Penjualan Barang Fisik Konter (Seperti di Gambar) */}
+      {isBannerVisible ? (
+        <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 text-white shadow-xl transition-all">
+          {/* Subtle Ambient Glow Effects */}
+          <div className="absolute -top-16 -right-16 w-56 h-56 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 left-1/4 w-48 h-48 bg-orange-600/10 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="relative p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            {/* Left: Graphic Icon + Title + Description */}
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="relative shrink-0">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center text-2xl sm:text-3xl shadow-lg shadow-amber-500/25 text-zinc-950 font-black">
+                  🔌
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-md bg-zinc-900 border border-amber-400/70 flex items-center justify-center text-[11px] shadow-sm">
+                  🛡️
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider font-mono bg-amber-500 text-zinc-950">
+                    BARANG FISIK
+                  </span>
+                  <span className="text-xs text-amber-400/90 font-mono font-bold">
+                    {activeBranch ? activeBranch.name : 'Konter Utama'}
+                  </span>
+                </div>
+                <h2 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                  <span>Catat Penjualan Fisik: Barang Konter</span>
+                </h2>
+                <p className="text-xs text-zinc-300 max-w-xl leading-relaxed">
+                  Pencatatan khusus barang konter fisik (Cas &amp; Charger, Casing, Tempered Glass, Kabel Data, Audio, dll). Transaksi otomatis potong stok &amp; langsung masuk kas toko.
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Quick Action Buttons & Collapse */}
+            <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end pt-2 md:pt-0 border-t md:border-t-0 border-zinc-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickRegisterBarcode(String(Date.now()).slice(-8));
+                  setQuickName('');
+                  setQuickBuyPrice(0);
+                  setQuickSellPrice(0);
+                  setQuickStock(20);
+                  setQuickUnit('pcs');
+                  setQuickCategory('Cas & Charger');
+                  setIsQuickRegisterOpen(true);
+                }}
+                className="flex-1 md:flex-initial px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Tambah Barang Baru</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsScannerOpen(true)}
+                className="px-3.5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold border border-zinc-700 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                title="Buka Kamera Barcode Scanner (F4)"
+              >
+                <Scan className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline">Scan (F4)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsBannerVisible(false)}
+                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-colors cursor-pointer"
+                title="Sembunyikan Banner untuk Layar Lebih Luas"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Banner Quick Footer Ribbon */}
+          <div className="px-4 py-2 bg-zinc-950/80 border-t border-zinc-800/80 flex flex-wrap items-center justify-between text-[11px] text-zinc-400 gap-2">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5 font-mono">
+                <Package className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-zinc-200 font-bold">{physicalProducts.length}</span>
+                <span>Barang Fisik Terdaftar</span>
+              </span>
+              <span className="flex items-center gap-1.5 font-mono">
+                <Tag className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-zinc-200 font-bold">{PHYSICAL_CATEGORIES.length}</span>
+                <span>Kategori Fisik</span>
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-emerald-400 font-mono">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>100% Khusus Barang Fisik (Pulsa &amp; Layanan di Tab Lain)</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 font-mono text-[10px] text-zinc-400">
+              <span className="hidden md:inline">Shortcut:</span>
+              <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">F2: Cari</span>
+              <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">F4: Scan</span>
+              <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">F9: Bayar</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs">
+          <span className="font-bold text-zinc-400 flex items-center gap-1.5">
+            <span>🔌</span>
+            <span>Banner Penjualan Barang Fisik (Disembunyikan)</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setIsBannerVisible(true)}
+            className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer"
+          >
+            <span>Tampilkan Banner</span>
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* 2. Controls: Search Bar + TOMBOL KATEGORI DROP DOWN + Barcode Scanner + Antrian */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        {/* Search Input */}
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input
@@ -670,13 +773,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            placeholder={
-              categoryGroup === 'DIGITAL'
-                ? 'Cari pulsa, kuota paket data, token PLN, e-wallet... (Tekan F2)'
-                : categoryGroup === 'FISIK'
-                ? 'Cari cas, charger, casing, kabel data, aksesoris... (Tekan F2)'
-                : 'Cari nama barang atau scan barcode kemasan... (Tekan F2)'
-            }
+            placeholder="Cari cas, charger, casing, kabel data, aksesoris, barcode... (Tekan F2)"
             className="w-full pl-10 pr-20 py-2.5 rounded-xl border text-xs sm:text-sm font-medium bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-xs"
           />
           {searchQuery && (
@@ -694,6 +791,149 @@ export const CashierView: React.FC<CashierViewProps> = ({
           </kbd>
         </div>
 
+        {/* 3. TOMBOL KATEGORI DROP DOWN */}
+        <div className="relative shrink-0" ref={categoryDropdownRef}>
+          <button
+            id="btn-category-dropdown"
+            type="button"
+            onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+            className={`w-full sm:w-auto h-11 px-3.5 sm:px-4 rounded-xl border text-xs sm:text-sm font-bold flex items-center justify-between sm:justify-start gap-2 transition-all cursor-pointer shadow-xs select-none ${
+              selectedCategory !== 'ALL'
+                ? 'bg-amber-500/10 border-amber-500 text-amber-500 dark:text-amber-400 ring-1 ring-amber-500/30'
+                : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700'
+            }`}
+            title="Klik untuk memilih kategori barang fisik"
+          >
+            <div className="flex items-center gap-2 truncate">
+              <Tag className="w-4 h-4 text-amber-500 shrink-0" />
+              <span className="hidden sm:inline text-zinc-400 font-normal">Kategori:</span>
+              <span className="font-extrabold truncate max-w-[130px] sm:max-w-[170px]">
+                {selectedCategory === 'ALL'
+                  ? 'Semua Kategori'
+                  : `${CATEGORY_ICONS[selectedCategory] || '📦'} ${selectedCategory}`}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                {categoryCounts[selectedCategory] ?? 0}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${
+                  isCategoryDropdownOpen ? 'rotate-180 text-amber-500' : ''
+                }`}
+              />
+            </div>
+          </button>
+
+          {/* Category Dropdown Menu Popup */}
+          {isCategoryDropdownOpen && (
+            <div
+              id="category-dropdown-menu"
+              className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-72 sm:w-80 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+            >
+              <div className="px-2.5 py-2 border-b border-zinc-100 dark:border-zinc-800/80 mb-1 flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-zinc-400 font-mono">
+                  Kategori Barang Fisik
+                </span>
+                {selectedCategory !== 'ALL' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory('ALL');
+                      setIsCategoryDropdownOpen(false);
+                      sound.playBeep(700, 0.03);
+                    }}
+                    className="text-[11px] text-amber-500 hover:text-amber-400 font-bold cursor-pointer"
+                  >
+                    Reset (Semua)
+                  </button>
+                )}
+              </div>
+
+              <div className="max-h-72 overflow-y-auto space-y-1 pr-1 scrollbar-thin">
+                {/* Option: Semua Kategori */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory('ALL');
+                    setIsCategoryDropdownOpen(false);
+                    sound.playBeep(700, 0.03);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                    selectedCategory === 'ALL'
+                      ? 'bg-amber-500 text-zinc-950 font-black shadow-xs'
+                      : 'text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base">🌟</span>
+                    <span>Semua Kategori Barang Fisik</span>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      selectedCategory === 'ALL'
+                        ? 'bg-zinc-950 text-amber-400'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                    }`}
+                  >
+                    {categoryCounts.ALL}
+                  </span>
+                </button>
+
+                {/* Options: Each Physical Category */}
+                {PHYSICAL_CATEGORIES.map((cat) => {
+                  const isSelected = selectedCategory === cat;
+                  const count = categoryCounts[cat] || 0;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory(cat);
+                        setIsCategoryDropdownOpen(false);
+                        sound.playBeep(700, 0.03);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-amber-500 text-zinc-950 font-black shadow-xs'
+                          : 'text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 truncate">
+                        <span className="text-base">{CATEGORY_ICONS[cat] || '📦'}</span>
+                        <span className="truncate">{cat}</span>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold shrink-0 ml-2 ${
+                          isSelected
+                            ? 'bg-zinc-950 text-amber-400'
+                            : count > 0
+                            ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                            : 'bg-zinc-100 dark:bg-zinc-800/40 text-zinc-400'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Barcode Scanner Button */}
+        <button
+          type="button"
+          onClick={() => setIsScannerOpen(true)}
+          className="h-11 px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-amber-500 text-zinc-700 dark:text-zinc-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-xs active:scale-95"
+          title="Buka Kamera Barcode Scanner (F4)"
+        >
+          <Scan className="w-4 h-4 text-amber-500" />
+          <span className="hidden md:inline">Scan (F4)</span>
+        </button>
+
+        {/* Held Carts / Antrian */}
         {heldCarts.length > 0 && (
           <div className="flex items-center gap-1.5 overflow-x-auto shrink-0">
             <span className="text-[11px] font-bold text-amber-500 flex items-center gap-1 shrink-0 font-mono">
@@ -714,24 +954,68 @@ export const CashierView: React.FC<CashierViewProps> = ({
         )}
       </div>
 
+      {/* 4. Horizontal Quick Category Chips (Tampilan Akses Cepat di Bawah Drop Down) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedCategory('ALL');
+            sound.playBeep(700, 0.03);
+          }}
+          className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer text-xs flex items-center gap-1.5 ${
+            selectedCategory === 'ALL'
+              ? 'bg-amber-500 text-zinc-950 font-black shadow-xs'
+              : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700'
+          }`}
+        >
+          <span>🌟 Semua</span>
+          <span className="text-[10px] opacity-75 font-mono">({categoryCounts.ALL})</span>
+        </button>
+
+        {PHYSICAL_CATEGORIES.map((cat) => {
+          const isSelected = selectedCategory === cat;
+          const count = categoryCounts[cat] || 0;
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => {
+                setSelectedCategory(cat);
+                sound.playBeep(700, 0.03);
+              }}
+              className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer text-xs flex items-center gap-1.5 ${
+                isSelected
+                  ? 'bg-amber-500 text-zinc-950 font-black shadow-xs'
+                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700'
+              }`}
+            >
+              <span>{CATEGORY_ICONS[cat]}</span>
+              <span>{cat}</span>
+              <span className="text-[10px] opacity-75 font-mono">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Main Split Screen: Left Catalog (7-8 cols), Right Cart (4-5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Side: Product Grid */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-2">
           <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
             <div className="flex items-center gap-2">
-              <span className="font-bold uppercase tracking-wider font-mono text-[11px] text-zinc-800 dark:text-zinc-200">
-                {categoryGroup === 'DIGITAL'
-                  ? '📱 Pulsa & Layanan HP'
-                  : categoryGroup === 'FISIK'
-                  ? '🔌 Barang Konter (Fisik)'
-                  : '🌟 Semua Katalog Produk'}
-                <span className="ml-1.5 font-normal text-zinc-400 font-mono">({filteredProducts.length})</span>
+              <span className="font-bold uppercase tracking-wider font-mono text-[11px] text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                <span>🔌</span>
+                <span>
+                  {selectedCategory === 'ALL'
+                    ? 'Katalog Barang Fisik Konter'
+                    : `Kategori: ${selectedCategory}`}
+                </span>
+                <span className="ml-1 font-normal text-zinc-400 font-mono">({filteredProducts.length})</span>
               </span>
-              {categoryGroup !== 'ALL' && (
+              {selectedCategory !== 'ALL' && (
                 <button
                   type="button"
-                  onClick={() => setCategoryGroup('ALL')}
+                  onClick={() => setSelectedCategory('ALL')}
                   className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-amber-500 font-bold cursor-pointer transition-colors"
                   title="Lihat semua produk tanpa filter"
                 >
@@ -791,21 +1075,13 @@ export const CashierView: React.FC<CashierViewProps> = ({
                   tabIndex={isOutOfStock ? -1 : 0}
                   onClick={() => {
                     if (isOutOfStock) return;
-                    if (product.serviceType && product.serviceType !== 'PRODUK_FISIK') {
-                      handleOpenMiniATM(product.serviceType, product.provider, product.nominal);
-                    } else {
-                      handleAddToCart(product, 1);
-                    }
+                    handleAddToCart(product, 1);
                   }}
                   onKeyDown={(e) => {
                     if (isOutOfStock) return;
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      if (product.serviceType && product.serviceType !== 'PRODUK_FISIK') {
-                        handleOpenMiniATM(product.serviceType, product.provider, product.nominal);
-                      } else {
-                        handleAddToCart(product, 1);
-                      }
+                      handleAddToCart(product, 1);
                     }
                   }}
                   className={`group text-left p-3 rounded-xl border transition-all duration-150 relative flex flex-col justify-between overflow-hidden shadow-2xs select-none ${
@@ -1332,7 +1608,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
               <div>
                 <h3 className="font-black text-sm sm:text-base flex items-center gap-1.5 text-amber-400">
                   <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>Daftarkan Barang dari Kemasan</span>
+                  <span>Daftarkan Barang Fisik Konter</span>
                 </h3>
                 <p className="text-[11px] text-zinc-400">
                   Barcode: <span className="font-mono font-bold text-amber-400">{quickRegisterBarcode}</span>
@@ -1356,7 +1632,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
                   type="text"
                   value={quickName}
                   onChange={(e) => setQuickName(e.target.value)}
-                  placeholder="Contoh: Roma Kelapa 300g / Aqua 600ml"
+                  placeholder="Contoh: Casing Matte iPhone 13 / Charger 20W Type-C / Kabel Fast Charge"
                   className="w-full px-3 py-2 rounded-xl border text-xs font-bold bg-zinc-950 border-zinc-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
                   autoFocus
                   required
@@ -1490,53 +1766,6 @@ export const CashierView: React.FC<CashierViewProps> = ({
         }}
         darkMode={darkMode}
       />
-
-      {/* Mini ATM & Konter Pulsa Transaction Modal */}
-      {isMiniATMModalOpen && activeBranch && (
-        <MiniATMTransactionModal
-          isOpen={isMiniATMModalOpen}
-          onClose={() => {
-            setIsMiniATMModalOpen(false);
-            setMiniATMPresetProvider(undefined);
-            setMiniATMPresetNominal(undefined);
-          }}
-          activeBranch={activeBranch}
-          settings={settings}
-          currentUser={currentUser}
-          initialService={miniATMInitialService}
-          initialProvider={miniATMPresetProvider}
-          initialNominal={miniATMPresetNominal}
-          onCompleteTransaction={(trx, balanceChanges, mutationMeta) => {
-            setIsMiniATMModalOpen(false);
-            setMiniATMPresetProvider(undefined);
-            setMiniATMPresetNominal(undefined);
-            onAdjustBranchBalances?.(activeBranch.id, balanceChanges, {
-              category: mutationMeta.category,
-              description: mutationMeta.description,
-              cashierName: currentUser?.name || 'Kasir Agen',
-              referenceId: trx.referenceNumber,
-            });
-            onTransactionCompleted(trx);
-          }}
-          darkMode={darkMode}
-        />
-      )}
-
-      {/* Quick Fee & Profit Calculator Modal */}
-      {isCalculatorOpen && (
-        <QuickFeeCalculatorModal
-          isOpen={isCalculatorOpen}
-          onClose={() => setIsCalculatorOpen(false)}
-          defaultAdminFee={settings.defaultAdminFee || 5000}
-          activeBranch={activeBranch}
-          onSelectTransaction={(data) => {
-            setMiniATMInitialService(data.serviceType);
-            setIsCalculatorOpen(false);
-            setIsMiniATMModalOpen(true);
-          }}
-          darkMode={darkMode}
-        />
-      )}
     </div>
   );
 };

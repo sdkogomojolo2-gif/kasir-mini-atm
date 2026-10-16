@@ -62,7 +62,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
               </div>
               <div>
                 <h3 className="font-extrabold text-base tracking-tight text-white">
-                  Pasang Kasir-Q di Perangkat
+                  Pasang MINI ATM-Q di Perangkat
                 </h3>
                 <p className="text-xs text-zinc-400">
                   Tersedia untuk HP Android, iPhone, dan Laptop / Desktop
@@ -123,12 +123,12 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             {activeGuideTab === 'android' && (
               <div className="space-y-3">
                 <div className="p-3 bg-zinc-950 border border-amber-500/20 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-sm shrink-0">
-                    Q
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shrink-0">
+                    ATM
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-amber-400">
-                      Nama Aplikasi di Layar: <span className="font-black text-sm text-white">Kasir-Q</span>
+                      Nama Aplikasi di Layar: <span className="font-black text-sm text-white">MINI ATM-Q</span>
                     </h4>
                     <p className="text-[11px] text-zinc-400">
                       Berfungsi offline tanpa sinyal & terhubung langsung ke printer thermal Bluetooth.
@@ -166,7 +166,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                       4
                     </span>
                     <div>
-                      Konfirmasi nama tampilan <strong className="text-white">Kasir-Q</strong> lalu klik Pasang / Install. Ikon Kasir-Q akan muncul di daftar aplikasi HP Anda!
+                      Konfirmasi nama tampilan <strong className="text-white">MINI ATM-Q</strong> lalu klik Pasang / Install. Ikon MINI ATM-Q akan muncul di daftar aplikasi HP Anda!
                     </div>
                   </li>
                 </ol>
@@ -176,12 +176,12 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             {activeGuideTab === 'laptop' && (
               <div className="space-y-3">
                 <div className="p-3 bg-zinc-950 border border-amber-500/20 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-sm shrink-0">
-                    Q
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shrink-0">
+                    ATM
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-amber-400">
-                      Aplikasi Desktop: <span className="font-black text-sm text-white">Kasir-Q</span>
+                      Aplikasi Desktop: <span className="font-black text-sm text-white">MINI ATM-Q</span>
                     </h4>
                     <p className="text-[11px] text-zinc-400">
                       Mendukung layar penuh (F11), barcode scanner USB/Bluetooth, dan printer thermal 58mm/80mm.
@@ -211,7 +211,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                       3
                     </span>
                     <div>
-                      Klik <strong className="text-white">"Instal Kasir-Q"</strong>. Kasir-Q akan langsung terbuka di jendela mandiri tanpa tab browser!
+                      Klik <strong className="text-white">"Instal MINI ATM-Q"</strong>. MINI ATM-Q akan langsung terbuka di jendela mandiri tanpa tab browser!
                     </div>
                   </li>
                 </ol>
@@ -221,12 +221,12 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             {activeGuideTab === 'ios' && (
               <div className="space-y-3">
                 <div className="p-3 bg-zinc-950 border border-amber-500/20 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-sm shrink-0">
-                    Q
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shrink-0">
+                    ATM
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-amber-400">
-                      Nama Aplikasi di iOS: <span className="font-black text-sm text-white">Kasir-Q</span>
+                      Nama Aplikasi di iOS: <span className="font-black text-sm text-white">MINI ATM-Q</span>
                     </h4>
                     <p className="text-[11px] text-zinc-400">
                       PWA resmi Apple iOS dengan performa lancar layaknya aplikasi App Store.
@@ -264,7 +264,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                       4
                     </span>
                     <div>
-                      Pastikan judul bernama <strong className="text-white">Kasir-Q</strong>, lalu ketuk <strong className="text-white">Tambah (Add)</strong> di pojok kanan atas.
+                      Pastikan judul bernama <strong className="text-white">MINI ATM-Q</strong>, lalu ketuk <strong className="text-white">Tambah (Add)</strong> di pojok kanan atas.
                     </div>
                   </li>
                 </ol>
@@ -303,7 +303,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
           <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <h4 className="text-sm font-bold text-emerald-300">
-              Kasir-Q Sudah Terpasang (Mode Standalone)
+              MINI ATM-Q Sudah Terpasang (Mode Standalone)
             </h4>
             <p className="text-xs text-emerald-400/80">
               Aplikasi berjalan langsung dari perangkat tanpa bilah browser. Printer thermal Bluetooth dan cetak struk instan bekerja optimal.
@@ -323,11 +323,11 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
           id="btn-pwa-header-install"
           type="button"
           onClick={handleInstallClick}
-          title="Pasang Kasir-Q di HP atau Laptop"
+          title="Pasang MINI ATM-Q di HP atau Laptop"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black shadow-md active:scale-95 transition-all cursor-pointer"
         >
           <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Pasang Kasir-Q</span>
+          <span className="hidden sm:inline">Pasang MINI ATM-Q</span>
           <span className="sm:hidden">Pasang</span>
         </button>
         {renderGuideModal()}
@@ -341,18 +341,18 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       <>
         <div className="p-4 rounded-2xl border border-zinc-800 bg-zinc-900 space-y-3">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-lg shrink-0 shadow-md">
-              Q
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shrink-0 shadow-md">
+              ATM
             </div>
             <div className="flex-1">
               <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>Pasang Aplikasi Kasir-Q</span>
+                <span>Pasang Aplikasi MINI ATM-Q</span>
                 <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500 text-zinc-950 font-mono">
                   PWA
                 </span>
               </h4>
               <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                Pasang langsung ke Layar Utama HP (Android &amp; iPhone) atau Desktop Laptop (Windows &amp; Mac) dengan nama tampilan <strong className="text-white">Kasir-Q</strong>. Akses kasir tanpa bilah browser dan cetak printer lancar.
+                Pasang langsung ke Layar Utama HP (Android &amp; iPhone) atau Desktop Laptop (Windows &amp; Mac) dengan nama tampilan <strong className="text-white">MINI ATM-Q</strong>. Akses kasir tanpa bilah browser dan cetak printer lancar.
               </p>
             </div>
           </div>
@@ -363,7 +363,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
               className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all active:scale-95"
             >
               <Download className="w-4 h-4" />
-              <span>Instal Kasir-Q Sekarang</span>
+              <span>Instal MINI ATM-Q Sekarang</span>
             </button>
             <button
               type="button"
@@ -388,12 +388,12 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       <div className="fixed bottom-16 md:bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl space-y-3 text-zinc-100 animate-in fade-in slide-in-from-bottom-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-lg shadow-sm">
-              Q
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shadow-sm">
+              ATM
             </div>
             <div>
               <h4 className="text-sm font-extrabold text-white">
-                Pasang Kasir-Q di Perangkat
+                Pasang MINI ATM-Q di Perangkat
               </h4>
               <p className="text-[11px] text-zinc-400">
                 Akses cepat di HP &amp; Laptop tanpa unduh Play Store

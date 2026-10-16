@@ -612,7 +612,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
             <div>
               <h3 className="font-extrabold text-base tracking-tight text-zinc-900 dark:text-zinc-100">
-                Pengaturan Sistem Kasir-Q
+                Pengaturan Sistem MINI ATM-Q
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
                 Identitas toko, printer thermal, QRIS, akun kasir &amp; database

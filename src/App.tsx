@@ -20,6 +20,7 @@ import { TopHeader } from './components/TopHeader';
 import { DashboardView } from './components/DashboardView';
 import { LoginModal } from './components/LoginModal';
 import { CashierView } from './components/CashierView';
+import { NonPhysicalSalesView } from './components/NonPhysicalSalesView';
 import { BranchesView } from './components/BranchesView';
 import { InventoryView } from './components/InventoryView';
 import { ReportsView } from './components/ReportsView';
@@ -849,6 +850,21 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'digital-sales' && (
+            <NonPhysicalSalesView
+              transactions={transactions}
+              activeBranch={activeBranch}
+              branches={branches}
+              settings={settings}
+              currentUser={currentUser}
+              onCompleteTransaction={handleTransactionCompleted}
+              onAdjustBranchBalances={handleRecordMutation}
+              onViewReceipt={(trx) => setSelectedReceipt(trx)}
+              onDeleteTransaction={handleCancelTransaction}
+              darkMode={darkMode}
+            />
+          )}
+
           {activeTab === 'cashier' && (
             <CashierView
               products={products}
@@ -866,7 +882,7 @@ export default function App() {
               onSelectBranch={handleSetActiveBranch}
               onAdjustBranchBalances={handleRecordMutation}
               onViewReceipt={(trx) => setSelectedReceipt(trx)}
-              initialCategoryGroup={cashierInitialGroup}
+              initialCategoryGroup={'FISIK'}
               darkMode={darkMode}
             />
           )}

@@ -107,7 +107,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-700/80 text-amber-400 flex items-center justify-center mx-auto mb-2">
             <Lock className="w-6 h-6" />
           </div>
-          <h2 className="text-lg sm:text-xl font-black tracking-tight">Kunci Layar Kasir-Q</h2>
+          <h2 className="text-lg sm:text-xl font-black tracking-tight">Kunci Layar MINI ATM-Q</h2>
           <p className="text-xs text-zinc-400 mt-1 flex items-center justify-center gap-1.5 font-mono">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             Database Lokal Terenkripsi AES-256

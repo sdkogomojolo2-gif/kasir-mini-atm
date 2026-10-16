@@ -2,6 +2,7 @@ import React from 'react';
 import {
   LayoutDashboard,
   ShoppingCart,
+  Smartphone,
   Package,
   BookOpen,
   BarChart3,
@@ -35,8 +36,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       badge: null,
     },
     {
+      id: 'digital-sales' as TabType,
+      label: 'Pulsa & ATM',
+      icon: Smartphone,
+      badge: null,
+    },
+    {
       id: 'cashier' as TabType,
-      label: 'Kasir',
+      label: 'Barang Fisik',
       icon: ShoppingCart,
       badge: cartItemCount > 0 ? cartItemCount : null,
     },
@@ -44,12 +51,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       id: 'branches' as TabType,
       label: 'Uang Kas',
       icon: Building2,
-      badge: null,
-    },
-    {
-      id: 'inventory' as TabType,
-      label: 'Stok',
-      icon: Package,
       badge: null,
     },
   ];

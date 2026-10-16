@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { CashierUser, CashierShift, StoreSettings, StoreBranch } from '../types';
 
-export type TabType = 'dashboard' | 'cashier' | 'branches' | 'inventory' | 'reports' | 'debts' | 'settings' | 'guide';
+export type TabType = 'dashboard' | 'cashier' | 'digital-sales' | 'branches' | 'inventory' | 'reports' | 'debts' | 'settings' | 'guide';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -133,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </h1>
                 <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  <span className="truncate">Kasir-Q POS &amp; Stok</span>
+                  <span className="truncate">MINI ATM-Q POS &amp; Konter</span>
                 </div>
               </div>
             )}
@@ -233,10 +233,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   id="sidebar-tab-cashier"
                   type="button"
-                  onClick={() => handleSelectTab('cashier')}
+                  onClick={() => {
+                    setIsKasirSubmenuOpen(true);
+                    if (activeTab !== 'cashier' && activeTab !== 'digital-sales') {
+                      handleSelectTab('digital-sales');
+                    }
+                  }}
                   title="Kasir & Penjualan"
                   className={`flex-1 flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer group ${
-                    activeTab === 'cashier'
+                    activeTab === 'cashier' || activeTab === 'digital-sales'
                       ? 'bg-amber-500 text-zinc-950 font-black shadow-md shadow-amber-500/20'
                       : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
                   }`}
@@ -244,7 +249,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="flex items-center gap-3 overflow-hidden">
                     <ShoppingCart
                       className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
-                        activeTab === 'cashier' ? 'text-zinc-950 stroke-[2.5]' : 'text-zinc-400 group-hover:text-zinc-200'
+                        activeTab === 'cashier' || activeTab === 'digital-sales'
+                          ? 'text-zinc-950 stroke-[2.5]'
+                          : 'text-zinc-400 group-hover:text-zinc-200'
                       }`}
                     />
                     {!isCollapsed && <span className="truncate tracking-wide">Kasir &amp; Penjualan</span>}
@@ -261,7 +268,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsKasirSubmenuOpen(!isKasirSubmenuOpen)}
-                    className="p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-900 transition-colors"
+                    className="p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-900 transition-colors cursor-pointer"
                     title={isKasirSubmenuOpen ? 'Tutup Sub-Menu' : 'Buka Sub-Menu'}
                   >
                     {isKasirSubmenuOpen ? (
@@ -273,54 +280,52 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 )}
               </div>
 
-              {/* Sub-menu items for Cashier */}
+              {/* Exact 2 Sub-Menu Items as Requested */}
               {!isCollapsed && isKasirSubmenuOpen && (
                 <div className="ml-4 pl-3 border-l-2 border-zinc-800 space-y-1 py-1">
+                  {/* 1. Catat Penjualan Non fisik (pulsa & Layanan) */}
                   <button
+                    id="sidebar-subtab-digital-sales"
                     type="button"
-                    onClick={() => handleSelectGroup('ALL')}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                      activeTab === 'cashier' && activeCashierGroup === 'ALL'
-                        ? 'bg-zinc-800 text-amber-400 font-extrabold'
+                    onClick={() => {
+                      handleSelectGroup?.('DIGITAL');
+                      handleSelectTab('digital-sales');
+                    }}
+                    className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === 'digital-sales'
+                        ? 'bg-zinc-800 text-amber-400 font-extrabold border-l-2 border-amber-500'
                         : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <span>🏷️</span>
-                      <span>Semua Katalog</span>
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSelectGroup('DIGITAL')}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                      activeTab === 'cashier' && activeCashierGroup === 'DIGITAL'
-                        ? 'bg-zinc-800 text-amber-400 font-extrabold'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 text-left">
                       <span>📱</span>
-                      <span>Pulsa &amp; Layanan HP</span>
+                      <span className="leading-tight">Catat Penjualan Non fisik (Pulsa &amp; Layanan)</span>
                     </span>
-                    <span className="text-[9px] px-1 py-0.2 rounded bg-zinc-800 text-zinc-400 font-mono">Digital</span>
                   </button>
 
+                  {/* 2. Catat Penjualan Fisik (Barang Konter (cas, Casing Dll)) */}
                   <button
+                    id="sidebar-subtab-physical-sales"
                     type="button"
-                    onClick={() => handleSelectGroup('FISIK')}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                      activeTab === 'cashier' && activeCashierGroup === 'FISIK'
-                        ? 'bg-zinc-800 text-amber-400 font-extrabold'
+                    onClick={() => {
+                      handleSelectGroup?.('FISIK');
+                      handleSelectTab('cashier');
+                    }}
+                    className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === 'cashier'
+                        ? 'bg-zinc-800 text-amber-400 font-extrabold border-l-2 border-amber-500'
                         : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
                     }`}
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 text-left">
                       <span>🔌</span>
-                      <span>Barang Konter (Cas, Casing, dll)</span>
+                      <span className="leading-tight">Catat Penjualan Fisik (Barang Konter)</span>
                     </span>
-                    <span className="text-[9px] px-1 py-0.2 rounded bg-zinc-800 text-zinc-400 font-mono">Fisik</span>
+                    {cartItemCount > 0 && (
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500 text-zinc-950 font-mono font-bold">
+                        {cartItemCount}
+                      </span>
+                    )}
                   </button>
                 </div>
               )}

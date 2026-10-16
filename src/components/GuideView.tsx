@@ -234,10 +234,10 @@ export const GuideView: React.FC<GuideViewProps> = ({
                       • <strong>Kalkulator Fee &amp; Simulasi Profit:</strong> Klik tombol kuning <strong>"Kalkulator Fee"</strong> di bilah atas untuk menghitung keuntungan agen dan simulasi kas sebelum memproses transaksi.
                     </p>
                     <p>
-                      • <strong>Cetak Struk Thermal &amp; Kirim WhatsApp:</strong>
+                      • <strong>Cetak Struk Thermal &amp; Kirim WhatsApp (Format Foto):</strong>
                       <br />- Cetak langsung ke printer Bluetooth / USB Thermal ukuran 58mm atau 80mm.
-                      <br />- Klik <strong>"Kirim Struk ke WA"</strong> untuk mengirim bukti digital resmi lengkap dengan No. Ref dan Kode Token ke WhatsApp pelanggan.
-                      <br />- Gunakan tombol <strong>"Salin Token"</strong> atau <strong>"Salin SN"</strong> untuk membagikan kode 20 digit ke pelanggan tanpa salah ketik.
+                      <br />- Klik <strong>"Kirim Foto Struk ke WhatsApp"</strong> untuk mengirim bukti digital resmi dalam bentuk <strong>foto/gambar jernih</strong> (bukan teks) langsung ke nomor WhatsApp pelanggan.
+                      <br />- Tersedia juga tombol <strong>"Unduh Foto (.PNG)"</strong> untuk menyimpan bukti transaksi ke galeri perangkat.
                     </p>
                   </div>
                 </div>

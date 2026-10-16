@@ -26,8 +26,8 @@
     <!-- Screen / Display -->
     <rect x="120" y="125" width="272" height="105" rx="18" fill="#064e3b" stroke="#34d399" stroke-width="6"/>
     <rect x="128" y="133" width="256" height="89" rx="14" fill="#10b981"/>
-    <text x="256" y="175" font-family="Plus Jakarta Sans, system-ui, -apple-system, sans-serif" font-size="34" font-weight="900" fill="#064e3b" text-anchor="middle" letter-spacing="1">Kasir-Q</text>
-    <text x="256" y="202" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700" fill="#047857" text-anchor="middle">POS &amp; TOKO</text>
+    <text x="256" y="175" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="28" font-weight="900" fill="#064e3b" text-anchor="middle" letter-spacing="1">MINI ATM-Q</text>
+    <text x="256" y="202" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#047857" text-anchor="middle">KONTER &amp; ATM</text>
 
     <!-- Keypad Buttons -->
     <circle cx="160" cy="270" r="14" fill="#34d399"/>

@@ -10,10 +10,10 @@ if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in 
     registerSW({
       immediate: true,
       onNeedRefresh() {
-        console.log('Kasir-Q: Konten baru tersedia, memuat pembaruan di latar belakang...');
+        console.log('MINI ATM-Q: Konten baru tersedia, memuat pembaruan di latar belakang...');
       },
       onOfflineReady() {
-        console.log('Kasir-Q: Aplikasi siap bekerja penuh dalam mode offline.');
+        console.log('MINI ATM-Q: Aplikasi siap bekerja penuh dalam mode offline.');
       },
     });
   } catch (err) {
