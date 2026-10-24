@@ -56,13 +56,13 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pos_dark_mode');
+      const saved = localStorage.getItem('miniatm_dark_mode_v2');
       if (saved !== null) {
         return saved === 'true';
       }
-      return true; // Default to Option 2: Minimalist High Contrast (Dark)
+      return false; // Default to White & Blue Mini ATM theme
     }
-    return true;
+    return false;
   });
 
   // Modals state
@@ -224,10 +224,10 @@ export default function App() {
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
-      localStorage.setItem('pos_dark_mode', 'true');
+      localStorage.setItem('miniatm_dark_mode_v2', 'true');
     } else {
       document.documentElement.classList.remove('dark');
-      localStorage.setItem('pos_dark_mode', 'false');
+      localStorage.setItem('miniatm_dark_mode_v2', 'false');
     }
   }, [darkMode]);
 
@@ -784,11 +784,11 @@ export default function App() {
   return (
     <div
       id="pos-app-root"
-      className={`h-screen w-screen overflow-hidden flex flex-col md:flex-row font-sans transition-colors duration-200 ${
+      className={`h-screen w-screen overflow-hidden flex flex-col lg:flex-row font-sans transition-colors duration-200 ${
         darkMode ? 'bg-[#0B1120] text-slate-100' : 'bg-slate-50 text-slate-900'
       }`}
     >
-      {/* 1. Left Vertical Locked Sidebar (Tidak Bisa Discroll Ke Bawah) */}
+      {/* 1. Left Vertical Locked Sidebar (Drawer on Mobile & Tablet, Static on Desktop) */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
@@ -811,7 +811,7 @@ export default function App() {
       />
 
       {/* 2. Right Main Scrollable View Area */}
-      <div className="flex-1 h-screen overflow-y-auto flex flex-col bg-slate-50 dark:bg-[#0B1120]">
+      <div className="flex-1 min-w-0 h-screen overflow-y-auto overflow-x-hidden flex flex-col bg-slate-50 dark:bg-[#0B1120]">
         {/* Top Header Bar */}
         <TopHeader
           activeTab={activeTab}
@@ -830,7 +830,7 @@ export default function App() {
         />
 
         {/* Main Tab Screens */}
-        <main className="flex-1 p-3 sm:p-5 lg:p-6 pb-20">
+        <main className="flex-1 min-w-0 p-2.5 sm:p-4 lg:p-6 pb-24 lg:pb-12">
           {activeTab === 'dashboard' && (
             <DashboardView
               products={products}

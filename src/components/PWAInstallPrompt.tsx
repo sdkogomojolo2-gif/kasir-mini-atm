@@ -52,19 +52,19 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
     if (!isGuideModalOpen) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-zinc-100">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="bg-white dark:bg-slate-900 border border-blue-200 dark:border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-slate-900 dark:text-slate-100">
           {/* Header */}
-          <div className="p-5 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
+          <div className="p-5 border-b border-blue-800 flex items-center justify-between bg-gradient-to-r from-blue-700 via-blue-600 to-blue-800 text-white">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center font-black text-lg">
-                <Sparkles className="w-5 h-5 text-amber-400" />
+              <div className="w-11 h-11 rounded-xl bg-white text-blue-700 flex items-center justify-center font-black text-xl shadow-md">
+                🏧
               </div>
               <div>
                 <h3 className="font-extrabold text-base tracking-tight text-white">
                   Pasang MINI ATM-Q di Perangkat
                 </h3>
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-blue-100">
                   Tersedia untuk HP Android, iPhone, dan Laptop / Desktop
                 </p>
               </div>
@@ -72,21 +72,21 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             <button
               type="button"
               onClick={() => setIsGuideModalOpen(false)}
-              className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Device Tabs */}
-          <div className="p-3 bg-zinc-950 border-b border-zinc-800 flex gap-2">
+          <div className="p-3 bg-blue-50/70 dark:bg-slate-950 border-b border-blue-100 dark:border-slate-800 flex gap-2">
             <button
               type="button"
               onClick={() => setActiveGuideTab('android')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeGuideTab === 'android'
-                  ? 'bg-amber-500 text-zinc-950 shadow-md font-black'
-                  : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 hover:text-zinc-200'
+                  ? 'bg-blue-600 text-white shadow-md font-black'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-blue-200 dark:border-slate-800 hover:bg-blue-50'
               }`}
             >
               <Smartphone className="w-3.5 h-3.5" />
@@ -97,8 +97,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
               onClick={() => setActiveGuideTab('laptop')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeGuideTab === 'laptop'
-                  ? 'bg-amber-500 text-zinc-950 shadow-md font-black'
-                  : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 hover:text-zinc-200'
+                  ? 'bg-blue-600 text-white shadow-md font-black'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-blue-200 dark:border-slate-800 hover:bg-blue-50'
               }`}
             >
               <Monitor className="w-3.5 h-3.5" />
@@ -109,8 +109,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
               onClick={() => setActiveGuideTab('ios')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeGuideTab === 'ios'
-                  ? 'bg-amber-500 text-zinc-950 shadow-md font-black'
-                  : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 hover:text-zinc-200'
+                  ? 'bg-blue-600 text-white shadow-md font-black'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-blue-200 dark:border-slate-800 hover:bg-blue-50'
               }`}
             >
               <Smartphone className="w-3.5 h-3.5" />
@@ -122,51 +122,53 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
           <div className="p-6 space-y-4 overflow-y-auto">
             {activeGuideTab === 'android' && (
               <div className="space-y-3">
-                <div className="p-3 bg-zinc-950 border border-amber-500/20 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shrink-0">
-                    ATM
-                  </div>
+                <div className="p-3 bg-blue-50 dark:bg-slate-950 border border-blue-200 dark:border-slate-800 rounded-2xl flex items-center gap-3">
+                  <img
+                    src="/icon.svg"
+                    alt="Ikon MINI ATM-Q"
+                    className="w-11 h-11 rounded-xl shadow-sm shrink-0"
+                  />
                   <div>
-                    <h4 className="text-xs font-bold text-amber-400">
-                      Nama Aplikasi di Layar: <span className="font-black text-sm text-white">MINI ATM-Q</span>
+                    <h4 className="text-xs font-bold text-blue-700 dark:text-blue-400">
+                      Nama &amp; Ikon Aplikasi: <span className="font-black text-sm text-blue-950 dark:text-white">MINI ATM-Q</span>
                     </h4>
-                    <p className="text-[11px] text-zinc-400">
-                      Berfungsi offline tanpa sinyal & terhubung langsung ke printer thermal Bluetooth.
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                      Ikon Mesin EDC Mini ATM Biru-Putih. Berfungsi offline &amp; terhubung ke printer thermal Bluetooth.
                     </p>
                   </div>
                 </div>
 
-                <ol className="space-y-3 text-xs text-zinc-300">
+                <ol className="space-y-3 text-xs text-slate-700 dark:text-slate-300">
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-mono font-bold flex items-center justify-center shrink-0">
                       1
                     </span>
                     <div>
-                      Buka aplikasi melalui browser <strong className="text-white">Google Chrome</strong> di HP Anda.
+                      Buka aplikasi melalui browser <strong className="text-blue-950 dark:text-white">Google Chrome</strong> di HP Anda.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-mono font-bold flex items-center justify-center shrink-0">
                       2
                     </span>
                     <div>
-                      Ketuk menu titik tiga <strong className="text-white">(⋮)</strong> di sudut kanan atas Chrome.
+                      Ketuk menu titik tiga <strong className="text-blue-950 dark:text-white">(⋮)</strong> di sudut kanan atas Chrome.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-amber-500 text-zinc-950 font-mono font-black flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-mono font-black flex items-center justify-center shrink-0">
                       3
                     </span>
                     <div>
-                      Pilih menu <strong className="text-white">"Pasang aplikasi" (Install app)</strong> atau <strong className="text-white">"Tambahkan ke Layar Utama"</strong>.
+                      Pilih menu <strong className="text-blue-950 dark:text-white">"Pasang aplikasi" (Install app)</strong> atau <strong className="text-blue-950 dark:text-white">"Tambahkan ke Layar Utama"</strong>.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-mono font-bold flex items-center justify-center shrink-0">
                       4
                     </span>
                     <div>
-                      Konfirmasi nama tampilan <strong className="text-white">MINI ATM-Q</strong> lalu klik Pasang / Install. Ikon MINI ATM-Q akan muncul di daftar aplikasi HP Anda!
+                      Konfirmasi nama tampilan <strong className="text-blue-950 dark:text-white">MINI ATM-Q</strong> lalu klik Pasang / Install. Ikon Mini ATM Biru-Putih akan muncul di layar HP Anda!
                     </div>
                   </li>
                 </ol>
@@ -175,43 +177,45 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
             {activeGuideTab === 'laptop' && (
               <div className="space-y-3">
-                <div className="p-3 bg-zinc-950 border border-amber-500/20 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shrink-0">
-                    ATM
-                  </div>
+                <div className="p-3 bg-blue-50 dark:bg-slate-950 border border-blue-200 dark:border-slate-800 rounded-2xl flex items-center gap-3">
+                  <img
+                    src="/icon.svg"
+                    alt="Ikon MINI ATM-Q"
+                    className="w-11 h-11 rounded-xl shadow-sm shrink-0"
+                  />
                   <div>
-                    <h4 className="text-xs font-bold text-amber-400">
-                      Aplikasi Desktop: <span className="font-black text-sm text-white">MINI ATM-Q</span>
+                    <h4 className="text-xs font-bold text-blue-700 dark:text-blue-400">
+                      Aplikasi Desktop: <span className="font-black text-sm text-blue-950 dark:text-white">MINI ATM-Q</span>
                     </h4>
-                    <p className="text-[11px] text-zinc-400">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
                       Mendukung layar penuh (F11), barcode scanner USB/Bluetooth, dan printer thermal 58mm/80mm.
                     </p>
                   </div>
                 </div>
 
-                <ol className="space-y-3 text-xs text-zinc-300">
+                <ol className="space-y-3 text-xs text-slate-700 dark:text-slate-300">
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-mono font-bold flex items-center justify-center shrink-0">
                       1
                     </span>
                     <div>
-                      Gunakan browser <strong className="text-white">Google Chrome</strong>, <strong className="text-white">Microsoft Edge</strong>, atau browser berbasis Chromium lainnya di Laptop / PC.
+                      Gunakan browser <strong className="text-blue-950 dark:text-white">Google Chrome</strong>, <strong className="text-blue-950 dark:text-white">Microsoft Edge</strong>, atau browser berbasis Chromium lainnya di Laptop / PC.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-amber-500 text-zinc-950 font-mono font-black flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-mono font-black flex items-center justify-center shrink-0">
                       2
                     </span>
                     <div>
-                      Lihat ikon instal di bilah alamat URL (di sebelah kanan bintang bookmark) yang berbentuk komputer dengan panah ke bawah <Download className="inline w-3.5 h-3.5 text-amber-400" />.
+                      Lihat ikon instal di bilah alamat URL (di sebelah kanan bintang bookmark) yang berbentuk komputer dengan panah ke bawah <Download className="inline w-3.5 h-3.5 text-blue-600" />.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-mono font-bold flex items-center justify-center shrink-0">
                       3
                     </span>
                     <div>
-                      Klik <strong className="text-white">"Instal MINI ATM-Q"</strong>. MINI ATM-Q akan langsung terbuka di jendela mandiri tanpa tab browser!
+                      Klik <strong className="text-blue-950 dark:text-white">"Instal MINI ATM-Q"</strong>. MINI ATM-Q akan langsung terbuka di jendela mandiri tanpa tab browser!
                     </div>
                   </li>
                 </ol>
@@ -220,51 +224,53 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
             {activeGuideTab === 'ios' && (
               <div className="space-y-3">
-                <div className="p-3 bg-zinc-950 border border-amber-500/20 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shrink-0">
-                    ATM
-                  </div>
+                <div className="p-3 bg-blue-50 dark:bg-slate-950 border border-blue-200 dark:border-slate-800 rounded-2xl flex items-center gap-3">
+                  <img
+                    src="/icon.svg"
+                    alt="Ikon MINI ATM-Q"
+                    className="w-11 h-11 rounded-xl shadow-sm shrink-0"
+                  />
                   <div>
-                    <h4 className="text-xs font-bold text-amber-400">
-                      Nama Aplikasi di iOS: <span className="font-black text-sm text-white">MINI ATM-Q</span>
+                    <h4 className="text-xs font-bold text-blue-700 dark:text-blue-400">
+                      Nama Aplikasi di iOS: <span className="font-black text-sm text-blue-950 dark:text-white">MINI ATM-Q</span>
                     </h4>
-                    <p className="text-[11px] text-zinc-400">
-                      PWA resmi Apple iOS dengan performa lancar layaknya aplikasi App Store.
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                      PWA resmi Apple iOS dengan ikon Mini ATM Biru-Putih.
                     </p>
                   </div>
                 </div>
 
-                <ol className="space-y-3 text-xs text-zinc-300">
+                <ol className="space-y-3 text-xs text-slate-700 dark:text-slate-300">
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-mono font-bold flex items-center justify-center shrink-0">
                       1
                     </span>
                     <div>
-                      Buka tautan aplikasi di browser bawaan <strong className="text-white">Safari</strong> di iPhone atau iPad.
+                      Buka tautan aplikasi di browser bawaan <strong className="text-blue-950 dark:text-white">Safari</strong> di iPhone atau iPad.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-amber-500 text-zinc-950 font-mono font-black flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-mono font-black flex items-center justify-center shrink-0">
                       2
                     </span>
                     <div>
-                      Ketuk tombol <strong className="text-white">Bagikan (Share)</strong> di bagian bawah layar (ikon kotak dengan panah ke atas).
+                      Ketuk tombol <strong className="text-blue-950 dark:text-white">Bagikan (Share)</strong> di bagian bawah layar (ikon kotak dengan panah ke atas).
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-mono font-bold flex items-center justify-center shrink-0">
                       3
                     </span>
                     <div>
-                      Gulir ke bawah dan ketuk <strong className="text-white">"Tambah ke Layar Utama" (Add to Home Screen)</strong>.
+                      Gulir ke bawah dan ketuk <strong className="text-blue-950 dark:text-white">"Tambah ke Layar Utama" (Add to Home Screen)</strong>.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-mono font-bold flex items-center justify-center shrink-0">
                       4
                     </span>
                     <div>
-                      Pastikan judul bernama <strong className="text-white">MINI ATM-Q</strong>, lalu ketuk <strong className="text-white">Tambah (Add)</strong> di pojok kanan atas.
+                      Pastikan judul bernama <strong className="text-blue-950 dark:text-white">MINI ATM-Q</strong>, lalu ketuk <strong className="text-blue-950 dark:text-white">Tambah (Add)</strong> di pojok kanan atas.
                     </div>
                   </li>
                 </ol>
@@ -273,11 +279,11 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
           </div>
 
           {/* Footer Action */}
-          <div className="p-4 bg-zinc-950 border-t border-zinc-800 flex items-center justify-between gap-3">
+          <div className="p-4 bg-blue-50/60 dark:bg-slate-950 border-t border-blue-100 dark:border-slate-800 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => openAppInNewTab()}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black flex items-center gap-2 transition-colors cursor-pointer shadow-md"
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black flex items-center gap-2 transition-colors cursor-pointer shadow-md"
             >
               <ExternalLink className="w-4 h-4" />
               <span>Buka Tautan Tab Penuh</span>
@@ -285,7 +291,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             <button
               type="button"
               onClick={() => setIsGuideModalOpen(false)}
-              className="px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white text-xs font-bold transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50 text-xs font-bold transition-colors cursor-pointer"
             >
               Tutup
             </button>
@@ -300,12 +306,12 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
     if (variant === 'settings-card') {
       return (
         <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-start gap-3">
-          <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h4 className="text-sm font-bold text-emerald-300">
+            <h4 className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
               MINI ATM-Q Sudah Terpasang (Mode Standalone)
             </h4>
-            <p className="text-xs text-emerald-400/80">
+            <p className="text-xs text-emerald-600 dark:text-emerald-400/80">
               Aplikasi berjalan langsung dari perangkat tanpa bilah browser. Printer thermal Bluetooth dan cetak struk instan bekerja optimal.
             </p>
           </div>
@@ -324,11 +330,11 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
           type="button"
           onClick={handleInstallClick}
           title="Pasang MINI ATM-Q di HP atau Laptop"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black shadow-md active:scale-95 transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-sm shadow-blue-600/20 active:scale-95 transition-all cursor-pointer shrink-0 whitespace-nowrap"
         >
-          <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Pasang MINI ATM-Q</span>
-          <span className="sm:hidden">Pasang</span>
+          <Download className="w-3.5 h-3.5 shrink-0" />
+          <span className="hidden md:inline">Pasang MINI ATM-Q</span>
+          <span className="hidden sm:inline md:hidden">Pasang</span>
         </button>
         {renderGuideModal()}
       </>
@@ -339,20 +345,22 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
   if (variant === 'settings-card') {
     return (
       <>
-        <div className="p-4 rounded-2xl border border-zinc-800 bg-zinc-900 space-y-3">
+        <div className="p-4 rounded-2xl border border-blue-200 dark:border-slate-800 bg-blue-50/60 dark:bg-slate-900 space-y-3">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shrink-0 shadow-md">
-              ATM
-            </div>
+            <img
+              src="/icon.svg"
+              alt="Ikon MINI ATM-Q"
+              className="w-11 h-11 rounded-xl shadow-md shrink-0"
+            />
             <div className="flex-1">
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <h4 className="text-sm font-bold text-blue-950 dark:text-white flex items-center gap-2">
                 <span>Pasang Aplikasi MINI ATM-Q</span>
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500 text-zinc-950 font-mono">
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-600 text-white font-mono">
                   PWA
                 </span>
               </h4>
-              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                Pasang langsung ke Layar Utama HP (Android &amp; iPhone) atau Desktop Laptop (Windows &amp; Mac) dengan nama tampilan <strong className="text-white">MINI ATM-Q</strong>. Akses kasir tanpa bilah browser dan cetak printer lancar.
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                Pasang langsung ke Layar Utama HP (Android &amp; iPhone) atau Desktop Laptop (Windows &amp; Mac) dengan nama tampilan <strong className="text-blue-900 dark:text-white">MINI ATM-Q</strong> dan ikon mesin EDC Mini ATM Biru-Putih.
               </p>
             </div>
           </div>
@@ -360,7 +368,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             <button
               type="button"
               onClick={handleInstallClick}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all active:scale-95"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all active:scale-95"
             >
               <Download className="w-4 h-4" />
               <span>Instal MINI ATM-Q Sekarang</span>
@@ -368,9 +376,9 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             <button
               type="button"
               onClick={() => setIsGuideModalOpen(true)}
-              className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors"
+              className="px-3 py-2 bg-white hover:bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors"
             >
-              <Smartphone className="w-3.5 h-3.5 text-amber-400" />
+              <Smartphone className="w-3.5 h-3.5 text-blue-600" />
               <span>Petunjuk HP &amp; Laptop</span>
             </button>
           </div>
@@ -385,25 +393,27 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
   return (
     <>
-      <div className="fixed bottom-16 md:bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl space-y-3 text-zinc-100 animate-in fade-in slide-in-from-bottom-4">
+      <div className="fixed bottom-16 lg:bottom-4 left-3 right-3 sm:left-auto sm:right-6 sm:w-96 z-40 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-slate-800 shadow-2xl space-y-2.5 text-slate-900 dark:text-slate-100 animate-in fade-in slide-in-from-bottom-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center font-black text-xs shadow-sm">
-              ATM
-            </div>
+            <img
+              src="/icon.svg"
+              alt="Ikon MINI ATM-Q"
+              className="w-10 h-10 rounded-xl shadow-sm shrink-0"
+            />
             <div>
-              <h4 className="text-sm font-extrabold text-white">
+              <h4 className="text-sm font-extrabold text-blue-950 dark:text-white">
                 Pasang MINI ATM-Q di Perangkat
               </h4>
-              <p className="text-[11px] text-zinc-400">
-                Akses cepat di HP &amp; Laptop tanpa unduh Play Store
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Akses cepat di HP &amp; Laptop dengan Ikon Mini ATM
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setDismissed(true)}
-            className="p-1 text-zinc-400 hover:text-white cursor-pointer"
+            className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -412,7 +422,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
           <button
             type="button"
             onClick={handleInstallClick}
-            className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-md transition-all"
+            className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-md transition-all"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Pasang Sekarang</span>
@@ -420,7 +430,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
           <button
             type="button"
             onClick={() => setIsGuideModalOpen(true)}
-            className="py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-xl border border-zinc-700 cursor-pointer"
+            className="py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold rounded-xl border border-blue-200 cursor-pointer"
           >
             Petunjuk
           </button>

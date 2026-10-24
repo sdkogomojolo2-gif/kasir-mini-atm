@@ -58,8 +58,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   return (
     <nav
       id="mobile-bottom-navigation"
-      aria-label="Navigasi Bawah Mobile"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/95 border-t border-zinc-800 backdrop-blur-md px-2 py-1 flex items-center justify-around safe-bottom shadow-2xl"
+      aria-label="Navigasi Bawah Mobile & Tablet"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 border-t border-blue-100 dark:border-slate-800 backdrop-blur-md px-2 py-1 flex items-center justify-around safe-bottom shadow-[0_-4px_20px_-4px_rgba(37,99,235,0.12)]"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -73,18 +73,18 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             onClick={() => setActiveTab(tab.id)}
             className={`flex flex-col items-center justify-center flex-1 py-1.5 px-1 relative transition-colors cursor-pointer ${
               isActive
-                ? 'text-amber-400 font-bold'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-blue-600'
             }`}
           >
             <div className="relative">
               <Icon
                 className={`w-5 h-5 transition-transform ${
-                  isActive ? 'scale-110 text-amber-400' : 'text-zinc-400'
+                  isActive ? 'scale-110 text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
                 }`}
               />
               {tab.badge !== null && (
-                <span className="absolute -top-1.5 -right-2 bg-amber-500 text-zinc-950 font-black text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-mono shadow-xs">
+                <span className="absolute -top-1.5 -right-2 bg-blue-600 text-white font-black text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-mono shadow-xs">
                   {tab.badge > 99 ? '99+' : tab.badge}
                 </span>
               )}
@@ -93,7 +93,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               {tab.label}
             </span>
             {isActive && (
-              <span className="w-1 h-1 rounded-full bg-amber-400 mt-0.5" />
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-0.5" />
             )}
           </button>
         );
@@ -106,14 +106,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         onClick={onOpenMobileMenu}
         className={`flex flex-col items-center justify-center flex-1 py-1.5 px-1 transition-colors cursor-pointer ${
           activeTab === 'dashboard' || activeTab === 'settings' || activeTab === 'guide'
-            ? 'text-amber-400 font-bold'
-            : 'text-zinc-400 hover:text-zinc-200'
+            ? 'text-blue-600 dark:text-blue-400 font-bold'
+            : 'text-slate-500 dark:text-slate-400 hover:text-blue-600'
         }`}
       >
         <Menu className="w-5 h-5" />
         <span className="text-[10px] tracking-tight mt-1 leading-none">Menu</span>
         {(activeTab === 'dashboard' || activeTab === 'settings' || activeTab === 'guide') && (
-          <span className="w-1 h-1 rounded-full bg-amber-400 mt-0.5" />
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-0.5" />
         )}
       </button>
     </nav>

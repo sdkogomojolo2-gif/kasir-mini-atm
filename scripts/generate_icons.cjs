@@ -31,141 +31,243 @@ function makeChunk(type, data) {
   return Buffer.concat([len, typeAndData, crc]);
 }
 
+function inRoundedRect(x, y, rx, ry, rw, rh, rad) {
+  if (x < rx || x > rx + rw || y < ry || y > ry + rh) return false;
+  const cx = rx + rw / 2;
+  const cy = ry + rh / 2;
+  const halfW = rw / 2;
+  const halfH = rh / 2;
+  const dx = Math.abs(x - cx);
+  const dy = Math.abs(y - cy);
+  if (dx > halfW - rad && dy > halfH - rad) {
+    return Math.hypot(dx - (halfW - rad), dy - (halfH - rad)) <= rad;
+  }
+  return true;
+}
+
 function generateIconPNG(size, filename) {
   const width = size;
   const height = size;
-  
-  // Create RGBA buffer with 1 extra filter byte per row
   const rawData = Buffer.alloc((width * 4 + 1) * height);
-  
+
   const cornerRadius = size * 0.22;
-  const cx = width / 2;
-  const cy = height / 2;
-  
+
   for (let y = 0; y < height; y++) {
     const rowOffset = y * (width * 4 + 1);
     rawData[rowOffset] = 0; // Filter: None
-    
+
     for (let x = 0; x < width; x++) {
       const pixelOffset = rowOffset + 1 + x * 4;
-      
-      // Check rounded corner mask
-      let inside = true;
-      const dx = Math.abs(x - cx);
-      const dy = Math.abs(y - cy);
-      const halfW = width / 2;
-      const halfH = height / 2;
-      
-      if (dx > halfW - cornerRadius && dy > halfH - cornerRadius) {
-        const cornerDist = Math.hypot(dx - (halfW - cornerRadius), dy - (halfH - cornerRadius));
-        if (cornerDist > cornerRadius) {
-          inside = false;
-        }
-      }
-      
-      if (!inside) {
+
+      // Normalize coordinates to 0..512 space so our Mini ATM illustration scales cleanly
+      const nx = (x / size) * 512;
+      const ny = (y / size) * 512;
+
+      if (!inRoundedRect(x, y, 0, 0, width, height, cornerRadius)) {
         rawData[pixelOffset] = 0;
         rawData[pixelOffset + 1] = 0;
         rawData[pixelOffset + 2] = 0;
         rawData[pixelOffset + 3] = 0;
         continue;
       }
-      
-      // Gradient background (Emerald / Teal)
+
+      // 1. Royal Blue Gradient Background (#1d4ed8 -> #1e3a8a)
       const gradRatio = (x + y) / (width + height);
-      const rBg = Math.round(5 * (1 - gradRatio) + 4 * gradRatio);
-      const gBg = Math.round(150 * (1 - gradRatio) + 120 * gradRatio);
-      const bBg = Math.round(105 * (1 - gradRatio) + 87 * gradRatio);
-      
-      let r = rBg;
-      let g = gBg;
-      let b = bBg;
+      let r = Math.round(37 * (1 - gradRatio) + 23 * gradRatio);
+      let g = Math.round(99 * (1 - gradRatio) + 54 * gradRatio);
+      let b = Math.round(235 * (1 - gradRatio) + 148 * gradRatio);
       let a = 255;
-      
-      // Outer border highlight
-      if (x < 6 || x >= width - 6 || y < 6 || y >= height - 6) {
-        r = Math.min(255, r + 40);
-        g = Math.min(255, g + 50);
-        b = Math.min(255, b + 40);
+
+      // Subtle inner border highlight
+      if (
+        inRoundedRect(nx, ny, 14, 14, 484, 484, 100) &&
+        !inRoundedRect(nx, ny, 19, 19, 474, 474, 96)
+      ) {
+        r = 96;
+        g = 165;
+        b = 250;
       }
-      
-      // Central "Q" / POS icon visual motif
-      // Center circle representing the magnifying / cart / coin / Q ring
-      const ringOuter = size * 0.28;
-      const ringInner = size * 0.17;
-      const distFromCenter = Math.hypot(x - cx, y - (cy - size * 0.04));
-      
-      // Outer ring for Q
-      if (distFromCenter <= ringOuter && distFromCenter >= ringInner) {
-        // Bright white/emerald ring
-        r = 255;
-        g = 255;
-        b = 255;
-      }
-      
-      // Tail of the "Q"
-      const tailX = cx + size * 0.12;
-      const tailY = cy + size * 0.08;
-      const tailDist = Math.hypot(x - tailX, y - tailY);
-      const inTailAngle = (x - cx > 0) && (y - cy > 0) && Math.abs((x - cx) - (y - cy)) < size * 0.07;
-      if (inTailAngle && distFromCenter <= ringOuter + size * 0.12 && distFromCenter >= ringInner * 0.8) {
-        r = 255;
-        g = 255;
-        b = 255;
-      }
-      
-      // Golden star / accent dot in center of Q
-      const dotDist = Math.hypot(x - cx, y - (cy - size * 0.04));
-      if (dotDist <= size * 0.07) {
-        r = 251;
-        g = 191;
-        b = 36; // Amber gold
-      }
-      
-      // Text bar / Cash register base indicator at bottom
-      const baseTop = cy + size * 0.26;
-      const baseBottom = cy + size * 0.36;
-      const baseLeft = cx - size * 0.32;
-      const baseRight = cx + size * 0.32;
-      if (x >= baseLeft && x <= baseRight && y >= baseTop && y <= baseBottom) {
-        r = 6;
-        g = 78;
-        b = 59; // Dark emerald base
-        // small gold dot inside base
-        if (Math.hypot(x - cx, y - (baseTop + baseBottom) / 2) <= size * 0.035) {
-          r = 251;
-          g = 191;
-          b = 36;
+
+      // 2. Top Thermal Receipt Paper Emerging from EDC Machine (x: 164..296, y: 46..110)
+      if (nx >= 164 && nx <= 296 && ny >= 48 && ny <= 112) {
+        const zig = Math.sin((nx - 164) * 0.22) * 5;
+        if (ny >= 54 + zig) {
+          r = 248;
+          g = 250;
+          b = 252;
+          // Blue receipt lines
+          if (nx >= 182 && nx <= 276 && ny >= 70 && ny <= 77) {
+            r = 59;
+            g = 130;
+            b = 246;
+          } else if (nx >= 182 && nx <= 252 && ny >= 86 && ny <= 92) {
+            r = 147;
+            g = 197;
+            b = 253;
+          }
         }
       }
-      
+
+      // 3. White Mini ATM / EDC Machine Body (x: 108..352, y: 96..428)
+      if (inRoundedRect(nx, ny, 108, 96, 244, 332, 36)) {
+        // Light blue outer border of EDC
+        if (!inRoundedRect(nx, ny, 115, 103, 230, 318, 30)) {
+          r = 219;
+          g = 234;
+          b = 254;
+        } else {
+          // Pure crisp white body
+          r = 255;
+          g = 255;
+          b = 255;
+        }
+
+        // Top Card Reader Slot
+        if (inRoundedRect(nx, ny, 148, 110, 164, 10, 5)) {
+          r = 30;
+          g = 58;
+          b = 138;
+        }
+
+        // EDC Screen Frame (x: 132..328, y: 132..240)
+        if (inRoundedRect(nx, ny, 132, 132, 196, 108, 18)) {
+          if (!inRoundedRect(nx, ny, 138, 138, 184, 96, 13)) {
+            // Royal Blue screen border
+            r = 37;
+            g = 99;
+            b = 235;
+          } else {
+            // Soft Ice Blue LCD screen
+            r = 239;
+            g = 246;
+            b = 255;
+
+            // Blue header pill inside screen
+            if (inRoundedRect(nx, ny, 148, 146, 164, 24, 6)) {
+              r = 29;
+              g = 78;
+              b = 216;
+            }
+            // Simulated "ATM" bold bars on screen
+            if (inRoundedRect(nx, ny, 164, 184, 132, 14, 4)) {
+              r = 30;
+              g = 58;
+              b = 138;
+            }
+            if (inRoundedRect(nx, ny, 182, 208, 96, 10, 4)) {
+              r = 59;
+              g = 130;
+              b = 246;
+            }
+          }
+        }
+
+        // EDC Keypad Buttons (3 columns x 4 rows)
+        const cols = [138, 204, 270];
+        const rows = [256, 294, 332, 372];
+        for (let rIdx = 0; rIdx < 4; rIdx++) {
+          for (let cIdx = 0; cIdx < 3; cIdx++) {
+            const bx = cols[cIdx];
+            const by = rows[rIdx];
+            if (inRoundedRect(nx, ny, bx, by, 52, 26, 7)) {
+              if (rIdx < 3) {
+                r = 219;
+                g = 234;
+                b = 254;
+              } else if (cIdx === 0) {
+                // Cancel Red
+                r = 239;
+                g = 68;
+                b = 68;
+              } else if (cIdx === 1) {
+                // Clear Gold
+                r = 245;
+                g = 158;
+                b = 11;
+              } else {
+                // Enter Green
+                r = 16;
+                g = 185;
+                b = 129;
+              }
+            }
+          }
+        }
+      }
+
+      // 4. Overlapping Sky-Blue & White Bank ATM Card on Right (x: 272..436, y: 236..428)
+      if (inRoundedRect(nx, ny, 272, 236, 164, 192, 24)) {
+        if (!inRoundedRect(nx, ny, 280, 244, 148, 176, 18)) {
+          // Crisp White Card Border
+          r = 255;
+          g = 255;
+          b = 255;
+        } else {
+          // Vibrant Cyan-Blue ATM Card surface
+          r = 14;
+          g = 165;
+          b = 233;
+
+          // Golden EMV Chip (x: 298..354, y: 266..310)
+          if (inRoundedRect(nx, ny, 298, 266, 56, 44, 8)) {
+            r = 250;
+            g = 204;
+            b = 21;
+            // Chip grid lines
+            if (Math.abs(ny - 288) < 1.8 || Math.abs(nx - 326) < 1.8) {
+              r = 180;
+              g = 130;
+              b = 8;
+            }
+          }
+
+          // White card stripes at bottom
+          if (inRoundedRect(nx, ny, 298, 332, 112, 12, 5)) {
+            r = 224;
+            g = 242;
+            b = 254;
+          }
+          if (inRoundedRect(nx, ny, 298, 354, 78, 10, 5)) {
+            r = 186;
+            g = 230;
+            b = 253;
+          }
+          if (inRoundedRect(nx, ny, 298, 378, 112, 26, 7)) {
+            r = 255;
+            g = 255;
+            b = 255;
+          }
+        }
+      }
+
       rawData[pixelOffset] = r;
       rawData[pixelOffset + 1] = g;
       rawData[pixelOffset + 2] = b;
       rawData[pixelOffset + 3] = a;
     }
   }
-  
+
   const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  
-  const ihdrData = Buffer.alloc(13);
-  ihdrData.writeUInt32BE(width, 0);
-  ihdrData.writeUInt32BE(height, 4);
-  ihdrData[8] = 8; // 8 bits per channel
-  ihdrData[9] = 6; // RGBA
-  ihdrData[10] = 0; // deflate
-  ihdrData[11] = 0; // standard filter
-  ihdrData[12] = 0; // non-interlaced
-  const ihdrChunk = makeChunk('IHDR', ihdrData);
-  
-  const compressed = zlib.deflateSync(rawData);
-  const idatChunk = makeChunk('IDAT', compressed);
-  
-  const iendChunk = makeChunk('IEND', Buffer.alloc(0));
-  
-  const pngBuffer = Buffer.concat([signature, ihdrChunk, idatChunk, iendChunk]);
-  fs.writeFileSync(filename, pngBuffer);
-  console.log(`Generated ${filename} (${size}x${size}, ${pngBuffer.length} bytes)`);
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8; // Bit depth
+  ihdr[9] = 6; // Color type: RGBA
+  ihdr[10] = 0;
+  ihdr[11] = 0;
+  ihdr[12] = 0;
+
+  const idatData = zlib.deflateSync(rawData, { level: 9 });
+
+  const png = Buffer.concat([
+    signature,
+    makeChunk('IHDR', ihdr),
+    makeChunk('IDAT', idatData),
+    makeChunk('IEND', Buffer.alloc(0)),
+  ]);
+
+  fs.writeFileSync(filename, png);
+  console.log(`Generated Mini ATM icon: ${filename} (${size}x${size})`);
 }
 
 generateIconPNG(192, 'public/pwa-192x192.png');

@@ -639,45 +639,45 @@ export const CashierView: React.FC<CashierViewProps> = ({
         </div>
       )}
 
-      {/* 1. Banner Penjualan Barang Fisik Konter (Seperti di Gambar) */}
+      {/* 1. Banner Penjualan Barang Fisik Konter (Kombinasi Putih & Biru - Responsif Mobile & Tablet) */}
       {isBannerVisible ? (
-        <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 text-white shadow-xl transition-all">
+        <div className="relative overflow-hidden rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 text-white shadow-lg transition-all">
           {/* Subtle Ambient Glow Effects */}
-          <div className="absolute -top-16 -right-16 w-56 h-56 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-10 left-1/4 w-48 h-48 bg-orange-600/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 left-1/4 w-48 h-48 bg-sky-400/15 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="relative p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="relative p-3.5 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 sm:gap-4">
             {/* Left: Graphic Icon + Title + Description */}
-            <div className="flex items-start sm:items-center gap-3.5">
-              <div className="relative shrink-0">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center text-2xl sm:text-3xl shadow-lg shadow-amber-500/25 text-zinc-950 font-black">
+            <div className="flex items-start gap-3 min-w-0 flex-1">
+              <div className="relative shrink-0 mt-0.5">
+                <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-white flex items-center justify-center text-xl sm:text-2xl shadow-md text-blue-700 font-black">
                   🔌
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-md bg-zinc-900 border border-amber-400/70 flex items-center justify-center text-[11px] shadow-sm">
+                <div className="absolute -bottom-1 -right-1 w-4.5 h-4.5 rounded-md bg-blue-600 border border-white flex items-center justify-center text-[10px] shadow-xs">
                   🛡️
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider font-mono bg-amber-500 text-zinc-950">
+              <div className="space-y-1 min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider font-mono bg-white text-blue-800 shadow-2xs shrink-0">
                     BARANG FISIK
                   </span>
-                  <span className="text-xs text-amber-400/90 font-mono font-bold">
+                  <span className="text-[11px] sm:text-xs text-blue-100 font-mono font-bold truncate">
                     {activeBranch ? activeBranch.name : 'Konter Utama'}
                   </span>
                 </div>
-                <h2 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
-                  <span>Catat Penjualan Fisik: Barang Konter</span>
+                <h2 className="text-sm sm:text-base lg:text-lg font-black tracking-tight text-white leading-snug">
+                  Catat Penjualan Fisik: Barang Konter
                 </h2>
-                <p className="text-xs text-zinc-300 max-w-xl leading-relaxed">
+                <p className="text-xs text-blue-100 leading-relaxed line-clamp-2 sm:line-clamp-none">
                   Pencatatan khusus barang konter fisik (Cas &amp; Charger, Casing, Tempered Glass, Kabel Data, Audio, dll). Transaksi otomatis potong stok &amp; langsung masuk kas toko.
                 </p>
               </div>
             </div>
 
             {/* Right: Quick Action Buttons & Collapse */}
-            <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end pt-2 md:pt-0 border-t md:border-t-0 border-zinc-800">
+            <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 justify-between sm:justify-end pt-2.5 lg:pt-0 border-t lg:border-t-0 border-blue-600/50">
               <button
                 type="button"
                 onClick={() => {
@@ -690,26 +690,26 @@ export const CashierView: React.FC<CashierViewProps> = ({
                   setQuickCategory('Cas & Charger');
                   setIsQuickRegisterOpen(true);
                 }}
-                className="flex-1 md:flex-initial px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                className="flex-1 sm:flex-initial px-3.5 py-2.5 rounded-xl bg-white hover:bg-blue-50 text-blue-800 text-xs font-black shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 text-blue-700 shrink-0" />
                 <span>+ Tambah Barang Baru</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsScannerOpen(true)}
-                className="px-3.5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold border border-zinc-700 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                className="px-3 py-2.5 rounded-xl bg-blue-900/60 hover:bg-blue-900 text-white text-xs font-bold border border-blue-400/40 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shrink-0 whitespace-nowrap"
                 title="Buka Kamera Barcode Scanner (F4)"
               >
-                <Scan className="w-4 h-4 text-amber-400" />
-                <span className="hidden sm:inline">Scan (F4)</span>
+                <Scan className="w-4 h-4 text-blue-200 shrink-0" />
+                <span>Scan</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsBannerVisible(false)}
-                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-blue-200 hover:text-white hover:bg-blue-900/50 transition-colors cursor-pointer shrink-0"
                 title="Sembunyikan Banner untuk Layar Lebih Luas"
               >
                 <ChevronUp className="w-4 h-4" />
@@ -718,44 +718,44 @@ export const CashierView: React.FC<CashierViewProps> = ({
           </div>
 
           {/* Banner Quick Footer Ribbon */}
-          <div className="px-4 py-2 bg-zinc-950/80 border-t border-zinc-800/80 flex flex-wrap items-center justify-between text-[11px] text-zinc-400 gap-2">
-            <div className="flex items-center gap-4">
+          <div className="px-3.5 sm:px-5 py-2 bg-blue-950/50 border-t border-blue-600/40 flex flex-wrap items-center justify-between text-[11px] text-blue-100 gap-2">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <span className="flex items-center gap-1.5 font-mono">
-                <Package className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-zinc-200 font-bold">{physicalProducts.length}</span>
-                <span>Barang Fisik Terdaftar</span>
+                <Package className="w-3.5 h-3.5 text-white shrink-0" />
+                <span className="text-white font-bold">{physicalProducts.length}</span>
+                <span>Barang Fisik</span>
               </span>
               <span className="flex items-center gap-1.5 font-mono">
-                <Tag className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-zinc-200 font-bold">{PHYSICAL_CATEGORIES.length}</span>
-                <span>Kategori Fisik</span>
+                <Tag className="w-3.5 h-3.5 text-white shrink-0" />
+                <span className="text-white font-bold">{PHYSICAL_CATEGORIES.length}</span>
+                <span>Kategori</span>
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 text-emerald-400 font-mono">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>100% Khusus Barang Fisik (Pulsa &amp; Layanan di Tab Lain)</span>
+              <span className="hidden md:inline-flex items-center gap-1.5 text-emerald-300 font-mono">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>100% Khusus Barang Fisik</span>
               </span>
             </div>
 
-            <div className="flex items-center gap-2 font-mono text-[10px] text-zinc-400">
-              <span className="hidden md:inline">Shortcut:</span>
-              <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">F2: Cari</span>
-              <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">F4: Scan</span>
-              <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">F9: Bayar</span>
+            <div className="hidden lg:flex items-center gap-2 font-mono text-[10px] text-blue-200">
+              <span>Shortcut:</span>
+              <span className="px-1.5 py-0.5 rounded bg-blue-900/70 text-white">F2: Cari</span>
+              <span className="px-1.5 py-0.5 rounded bg-blue-900/70 text-white">F4: Scan</span>
+              <span className="px-1.5 py-0.5 rounded bg-blue-900/70 text-white">F9: Bayar</span>
             </div>
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs">
-          <span className="font-bold text-zinc-400 flex items-center gap-1.5">
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-slate-900 border border-blue-200 dark:border-slate-800 text-xs">
+          <span className="font-bold text-blue-900 dark:text-slate-300 flex items-center gap-1.5 truncate">
             <span>🔌</span>
-            <span>Banner Penjualan Barang Fisik (Disembunyikan)</span>
+            <span className="truncate">Banner Penjualan Barang Fisik</span>
           </span>
           <button
             type="button"
             onClick={() => setIsBannerVisible(true)}
-            className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer"
+            className="text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 cursor-pointer shrink-0 ml-2"
           >
-            <span>Tampilkan Banner</span>
+            <span>Tampilkan</span>
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -765,7 +765,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         {/* Search Input */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500" />
           <input
             ref={searchInputRef}
             id="input-pos-product-search"
@@ -774,19 +774,19 @@ export const CashierView: React.FC<CashierViewProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
             placeholder="Cari cas, charger, casing, kabel data, aksesoris, barcode... (Tekan F2)"
-            className="w-full pl-10 pr-20 py-2.5 rounded-xl border text-xs sm:text-sm font-medium bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-xs"
+            className="w-full pl-10 pr-20 py-2.5 rounded-xl border text-xs sm:text-sm font-medium bg-white dark:bg-slate-900 border-blue-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-all shadow-xs"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-9 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 cursor-pointer"
+              className="absolute right-9 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
               title="Hapus pencarian"
             >
               ✕
             </button>
           )}
-          <kbd className="hidden sm:inline-block absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded bg-zinc-50 dark:bg-zinc-800">
+          <kbd className="hidden sm:inline-block absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-blue-700 border border-blue-200 dark:border-slate-700 rounded bg-blue-50 dark:bg-slate-800">
             F2
           </kbd>
         </div>
@@ -799,14 +799,14 @@ export const CashierView: React.FC<CashierViewProps> = ({
             onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
             className={`w-full sm:w-auto h-11 px-3.5 sm:px-4 rounded-xl border text-xs sm:text-sm font-bold flex items-center justify-between sm:justify-start gap-2 transition-all cursor-pointer shadow-xs select-none ${
               selectedCategory !== 'ALL'
-                ? 'bg-amber-500/10 border-amber-500 text-amber-500 dark:text-amber-400 ring-1 ring-amber-500/30'
-                : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700'
+                ? 'bg-blue-600 border-blue-700 text-white shadow-sm shadow-blue-600/20'
+                : 'bg-white dark:bg-slate-900 border-blue-200 dark:border-slate-800 text-blue-950 dark:text-slate-200 hover:border-blue-400 hover:bg-blue-50/50'
             }`}
             title="Klik untuk memilih kategori barang fisik"
           >
             <div className="flex items-center gap-2 truncate">
-              <Tag className="w-4 h-4 text-amber-500 shrink-0" />
-              <span className="hidden sm:inline text-zinc-400 font-normal">Kategori:</span>
+              <Tag className={`w-4 h-4 shrink-0 ${selectedCategory !== 'ALL' ? 'text-white' : 'text-blue-600'}`} />
+              <span className={`hidden sm:inline font-normal ${selectedCategory !== 'ALL' ? 'text-blue-100' : 'text-slate-500'}`}>Kategori:</span>
               <span className="font-extrabold truncate max-w-[130px] sm:max-w-[170px]">
                 {selectedCategory === 'ALL'
                   ? 'Semua Kategori'
@@ -814,13 +814,17 @@ export const CashierView: React.FC<CashierViewProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+              <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black ${
+                selectedCategory !== 'ALL'
+                  ? 'bg-white text-blue-700'
+                  : 'bg-blue-50 dark:bg-slate-800 text-blue-700 dark:text-slate-300'
+              }`}>
                 {categoryCounts[selectedCategory] ?? 0}
               </span>
               <ChevronDown
-                className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${
-                  isCategoryDropdownOpen ? 'rotate-180 text-amber-500' : ''
-                }`}
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  selectedCategory !== 'ALL' ? 'text-white' : 'text-blue-600'
+                } ${isCategoryDropdownOpen ? 'rotate-180' : ''}`}
               />
             </div>
           </button>
@@ -829,10 +833,10 @@ export const CashierView: React.FC<CashierViewProps> = ({
           {isCategoryDropdownOpen && (
             <div
               id="category-dropdown-menu"
-              className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-72 sm:w-80 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+              className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-72 sm:w-80 rounded-2xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-slate-800 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
             >
-              <div className="px-2.5 py-2 border-b border-zinc-100 dark:border-zinc-800/80 mb-1 flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-wider text-zinc-400 font-mono">
+              <div className="px-2.5 py-2 border-b border-blue-100 dark:border-slate-800/80 mb-1 flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-slate-400 font-mono">
                   Kategori Barang Fisik
                 </span>
                 {selectedCategory !== 'ALL' && (
@@ -843,7 +847,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
                       setIsCategoryDropdownOpen(false);
                       sound.playBeep(700, 0.03);
                     }}
-                    className="text-[11px] text-amber-500 hover:text-amber-400 font-bold cursor-pointer"
+                    className="text-[11px] text-blue-600 hover:text-blue-700 font-bold cursor-pointer"
                   >
                     Reset (Semua)
                   </button>
@@ -861,8 +865,8 @@ export const CashierView: React.FC<CashierViewProps> = ({
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                     selectedCategory === 'ALL'
-                      ? 'bg-amber-500 text-zinc-950 font-black shadow-xs'
-                      : 'text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                      ? 'bg-blue-600 text-white font-black shadow-xs'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -872,8 +876,8 @@ export const CashierView: React.FC<CashierViewProps> = ({
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                       selectedCategory === 'ALL'
-                        ? 'bg-zinc-950 text-amber-400'
-                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                        ? 'bg-white text-blue-700'
+                        : 'bg-blue-50 dark:bg-slate-800 text-blue-700'
                     }`}
                   >
                     {categoryCounts.ALL}
@@ -895,8 +899,8 @@ export const CashierView: React.FC<CashierViewProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-amber-500 text-zinc-950 font-black shadow-xs'
-                          : 'text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                          ? 'bg-blue-600 text-white font-black shadow-xs'
+                          : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 truncate">
@@ -906,10 +910,10 @@ export const CashierView: React.FC<CashierViewProps> = ({
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold shrink-0 ml-2 ${
                           isSelected
-                            ? 'bg-zinc-950 text-amber-400'
+                            ? 'bg-white text-blue-700'
                             : count > 0
-                            ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
-                            : 'bg-zinc-100 dark:bg-zinc-800/40 text-zinc-400'
+                            ? 'bg-blue-50 dark:bg-slate-800 text-blue-700'
+                            : 'bg-slate-100 dark:bg-slate-800/40 text-slate-400'
                         }`}
                       >
                         {count}
@@ -1422,64 +1426,64 @@ export const CashierView: React.FC<CashierViewProps> = ({
         </div>
       </div>
 
-      {/* Floating Bottom Bar for Mobile / HP (Pinned above mobile nav) */}
+      {/* Floating Bottom Bar for Mobile & Tablet (Pinned above bottom nav) */}
       {cart.length > 0 && (
         <div
           id="mobile-cart-floating-bar"
-          className="lg:hidden fixed bottom-14 left-0 right-0 z-30 p-2.5 bg-zinc-950 border-t border-zinc-800 shadow-2xl flex items-center justify-between gap-2 safe-bottom animate-in slide-in-from-bottom-2 duration-150"
+          className="lg:hidden fixed bottom-14 left-0 right-0 z-30 p-2.5 bg-white dark:bg-slate-900 border-t border-blue-200 dark:border-slate-800 shadow-[0_-4px_20px_-4px_rgba(37,99,235,0.2)] flex items-center justify-between gap-2 safe-bottom animate-in slide-in-from-bottom-2 duration-150"
         >
           <button
             type="button"
             onClick={() => setIsMobileCartDrawerOpen(true)}
-            className="flex items-center gap-2 text-left min-w-0 flex-1 cursor-pointer"
+            className="flex items-center gap-2.5 text-left min-w-0 flex-1 cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-700 text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
               <ShoppingBag className="w-4 h-4" />
             </div>
             <div className="truncate">
-              <div className="text-[10px] text-zinc-400 font-mono">
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                 {totalItemCount} barang di keranjang
               </div>
-              <div className="font-black text-sm text-amber-400 font-mono font-numeric leading-tight">
+              <div className="font-black text-sm text-blue-700 dark:text-blue-400 font-mono font-numeric leading-tight">
                 {formatRupiah(grandTotal)}
               </div>
             </div>
-            <ChevronUp className="w-4 h-4 text-zinc-400 ml-1" />
+            <ChevronUp className="w-4 h-4 text-blue-600 ml-1 shrink-0" />
           </button>
 
           <button
             id="mobile-btn-quick-checkout"
             type="button"
             onClick={() => setIsCheckoutOpen(true)}
-            className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs flex items-center gap-1.5 shadow-md shrink-0 cursor-pointer active:scale-95"
+            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center gap-1.5 shadow-md shrink-0 cursor-pointer active:scale-95"
           >
-            <span>Bayar (F9)</span>
+            <span>Bayar</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Mobile Cart Slide-up Sheet / Drawer */}
+      {/* Mobile & Tablet Cart Slide-up Sheet / Drawer */}
       {isMobileCartDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 backdrop-blur-xs lg:hidden animate-in fade-in duration-150">
-          <div className="bg-zinc-900 border-t border-zinc-800 rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden text-zinc-100 shadow-2xl animate-in slide-in-from-bottom duration-200">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-slate-900/60 backdrop-blur-xs lg:hidden animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 border-t border-blue-200 dark:border-slate-800 rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 shadow-2xl animate-in slide-in-from-bottom duration-200">
             {/* Drawer Header */}
-            <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/60">
+            <div className="p-4 border-b border-blue-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white">
               <div className="flex items-center gap-2">
-                <ShoppingBag className="w-4 h-4 text-amber-400" />
+                <ShoppingBag className="w-4 h-4 text-white" />
                 <h3 className="font-extrabold text-sm">Keranjang Belanja ({cart.length})</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMobileCartDrawerOpen(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-white cursor-pointer"
+                className="p-1 rounded-lg text-blue-100 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Items */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2.5 divide-y divide-zinc-800">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5 divide-y divide-blue-100 dark:divide-slate-800">
               {cart.map((item) => (
                 <div key={item.product.id} className="pt-2 first:pt-0">
                   <div className="flex items-start justify-between">
@@ -1488,37 +1492,37 @@ export const CashierView: React.FC<CashierViewProps> = ({
                         <img
                           src={item.product.imageUrl}
                           alt={item.product.name}
-                          className="w-8 h-8 rounded-lg object-cover border border-zinc-700 shrink-0"
+                          className="w-8 h-8 rounded-lg object-cover border border-blue-200 dark:border-slate-700 shrink-0"
                         />
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="font-bold text-xs text-white truncate">{item.product.name}</div>
-                        <div className="text-[10px] text-zinc-400 font-mono">
+                        <div className="font-bold text-xs text-slate-900 dark:text-white truncate">{item.product.name}</div>
+                        <div className="text-[10px] text-slate-500 font-mono">
                           {formatRupiah(item.product.sellPrice)} / {item.product.unit}
                         </div>
                       </div>
                     </div>
-                    <div className="font-bold text-xs text-amber-400 font-mono shrink-0 pl-2">
+                    <div className="font-bold text-xs text-blue-700 dark:text-blue-400 font-mono shrink-0 pl-2">
                       {formatRupiah(item.subtotal)}
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center gap-2 bg-zinc-950 rounded-lg p-1 border border-zinc-800">
+                    <div className="flex items-center gap-2 bg-blue-50/70 dark:bg-slate-950 rounded-lg p-1 border border-blue-200 dark:border-slate-800">
                       <button
                         type="button"
                         onClick={() => handleUpdateQty(item.product.id, -1)}
-                        className="w-7 h-7 flex items-center justify-center rounded text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded text-blue-700 dark:text-slate-300 hover:bg-blue-100 cursor-pointer"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="w-8 text-center font-bold text-xs font-mono">
+                      <span className="w-8 text-center font-bold text-xs font-mono text-slate-900 dark:text-white">
                         {item.quantity}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleUpdateQty(item.product.id, 1)}
-                        className="w-7 h-7 flex items-center justify-center rounded text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded text-blue-700 dark:text-slate-300 hover:bg-blue-100 cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -1527,7 +1531,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveItem(item.product.id)}
-                      className="p-1.5 text-zinc-400 hover:text-rose-400 cursor-pointer"
+                      className="p-1.5 text-slate-400 hover:text-rose-500 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -1537,10 +1541,10 @@ export const CashierView: React.FC<CashierViewProps> = ({
             </div>
 
             {/* Drawer Footer Actions */}
-            <div className="p-4 bg-zinc-950 border-t border-zinc-800 space-y-3">
+            <div className="p-4 bg-blue-50/50 dark:bg-slate-950 border-t border-blue-100 dark:border-slate-800 space-y-3">
               <div className="flex justify-between items-baseline font-mono">
-                <span className="text-xs text-zinc-400 font-bold">TOTAL:</span>
-                <span className="font-black text-xl text-amber-400">
+                <span className="text-xs text-slate-500 font-bold">TOTAL:</span>
+                <span className="font-black text-xl text-blue-700 dark:text-blue-400">
                   {formatRupiah(grandTotal)}
                 </span>
               </div>
@@ -1552,7 +1556,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
                     handleHoldCart();
                     setIsMobileCartDrawerOpen(false);
                   }}
-                  className="py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-200 text-xs font-bold"
+                  className="py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-900 dark:text-slate-200 text-xs font-bold cursor-pointer"
                 >
                   Simpan Antrian
                 </button>
@@ -1562,7 +1566,7 @@ export const CashierView: React.FC<CashierViewProps> = ({
                     setIsMobileCartDrawerOpen(false);
                     setIsCheckoutOpen(true);
                   }}
-                  className="py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black flex items-center justify-center gap-1.5"
+                  className="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>Lanjut Bayar</span>
                   <ArrowRight className="w-4 h-4" />

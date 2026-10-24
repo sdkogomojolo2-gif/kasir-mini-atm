@@ -1,45 +1,85 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#059669"/>
-      <stop offset="100%" stop-color="#047857"/>
+    <!-- Royal Blue Gradient Background -->
+    <linearGradient id="bgBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="55%" stop-color="#1e40af"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#34d399"/>
-      <stop offset="100%" stop-color="#10b981"/>
+    <!-- Soft Sky Blue Inner Glow -->
+    <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#eff6ff"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+    <!-- ATM Card Gradient -->
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <!-- Gold Chip Gradient -->
+    <linearGradient id="goldChip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#eab308"/>
     </linearGradient>
   </defs>
-  <!-- Background with safe padding for maskable -->
-  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
-  
-  <!-- Cash Register / POS Stylized Icon -->
-  <g transform="translate(80, 80) scale(0.6875)">
-    <!-- Base / Cash Drawer -->
-    <rect x="30" y="320" width="452" height="130" rx="24" fill="#064e3b" stroke="#34d399" stroke-width="12"/>
-    <!-- Drawer Lock & Handle -->
-    <circle cx="256" cy="385" r="16" fill="#fbbf24"/>
-    <rect x="180" y="380" width="152" height="10" rx="5" fill="#34d399" opacity="0.6"/>
 
-    <!-- Main Register Body -->
-    <path d="M70 320 L110 130 C114 110 132 96 152 96 L360 96 C380 96 398 110 402 130 L442 320 Z" fill="#0f172a" stroke="#34d399" stroke-width="12"/>
+  <!-- Rounded App Icon Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgBlue)"/>
+  <rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#60a5fa" stroke-width="4" stroke-opacity="0.35"/>
 
-    <!-- Screen / Display -->
-    <rect x="120" y="125" width="272" height="105" rx="18" fill="#064e3b" stroke="#34d399" stroke-width="6"/>
-    <rect x="128" y="133" width="256" height="89" rx="14" fill="#10b981"/>
-    <text x="256" y="175" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="28" font-weight="900" fill="#064e3b" text-anchor="middle" letter-spacing="1">MINI ATM-Q</text>
-    <text x="256" y="202" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#047857" text-anchor="middle">KONTER &amp; ATM</text>
+  <!-- Top Thermal Receipt Paper Emerging from EDC Machine -->
+  <path d="M168 112 L168 48 L188 60 L208 48 L228 60 L248 48 L268 60 L288 48 L304 60 L304 112 Z" fill="#ffffff" stroke="#bfdbfe" stroke-width="5" stroke-linejoin="round"/>
+  <line x1="188" y1="74" x2="284" y2="74" stroke="#3b82f6" stroke-width="6" stroke-linecap="round"/>
+  <line x1="188" y1="90" x2="256" y2="90" stroke="#93c5fd" stroke-width="5" stroke-linecap="round"/>
 
-    <!-- Keypad Buttons -->
-    <circle cx="160" cy="270" r="14" fill="#34d399"/>
-    <circle cx="208" cy="270" r="14" fill="#34d399"/>
-    <circle cx="256" cy="270" r="14" fill="#34d399"/>
-    <circle cx="304" cy="270" r="14" fill="#34d399"/>
-    <circle cx="352" cy="270" r="14" fill="#f59e0b"/>
+  <!-- Main White EDC / Mini ATM Terminal Body -->
+  <rect x="116" y="96" width="240" height="332" rx="36" fill="#ffffff" stroke="#dbeafe" stroke-width="8"/>
+  <!-- Top Card Reader Slot on EDC -->
+  <rect x="152" y="108" width="168" height="10" rx="5" fill="#1e3a8a"/>
 
-    <!-- Receipt Paper Coming Out from Top -->
-    <path d="M200 96 L200 30 L220 45 L240 30 L260 45 L280 30 L300 45 L312 30 L312 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="6"/>
-    <!-- Lines on Receipt -->
-    <line x1="216" y1="56" x2="296" y2="56" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
-    <line x1="216" y1="72" x2="276" y2="72" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+  <!-- EDC Blue Framed Display Screen -->
+  <rect x="140" y="132" width="192" height="106" rx="18" fill="url(#screenGrad)" stroke="#2563eb" stroke-width="6"/>
+  <!-- Top Status Bar inside Screen -->
+  <rect x="154" y="144" width="164" height="22" rx="6" fill="#1d4ed8"/>
+  <text x="236" y="159" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="13" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1.5">MINI ATM-Q</text>
+
+  <!-- Main Screen Text -->
+  <text x="236" y="196" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="26" font-weight="900" fill="#1e3a8a" text-anchor="middle" letter-spacing="0.5">ATM &amp; EDC</text>
+  <text x="236" y="220" font-family="JetBrains Mono, monospace" font-size="13" font-weight="800" fill="#2563eb" text-anchor="middle">TRANSFER • TARIK TUNAI</text>
+
+  <!-- EDC Keypad Grid (3x3 + Action Row) -->
+  <!-- Row 1 -->
+  <rect x="144" y="256" width="52" height="28" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <rect x="210" y="256" width="52" height="28" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <rect x="276" y="256" width="52" height="28" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <!-- Row 2 -->
+  <rect x="144" y="296" width="52" height="28" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <rect x="210" y="296" width="52" height="28" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <rect x="276" y="296" width="52" height="28" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <!-- Row 3 -->
+  <rect x="144" y="336" width="52" height="28" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <rect x="210" y="336" width="52" height="28" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <rect x="276" y="336" width="52" height="28" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <!-- Row 4: Cancel (Red), Clear (Yellow), Enter (Green/Blue) -->
+  <rect x="144" y="376" width="52" height="30" rx="8" fill="#ef4444"/>
+  <rect x="210" y="376" width="52" height="30" rx="8" fill="#f59e0b"/>
+  <rect x="276" y="376" width="52" height="30" rx="8" fill="#10b981"/>
+
+  <!-- Overlapping Bank ATM Card on Right Side -->
+  <g transform="translate(268, 250) rotate(-10)">
+    <rect x="0" y="0" width="164" height="196" rx="22" fill="url(#cardGrad)" stroke="#ffffff" stroke-width="8"/>
+    <!-- Magnetic Stripe / Card Accent -->
+    <rect x="24" y="26" width="54" height="42" rx="8" fill="url(#goldChip)" stroke="#ca8a04" stroke-width="2"/>
+    <!-- Chip Lines -->
+    <line x1="24" y1="47" x2="78" y2="47" stroke="#a16207" stroke-width="2"/>
+    <line x1="51" y1="26" x2="51" y2="68" stroke="#a16207" stroke-width="2"/>
+    <!-- Contactless NFC Waves -->
+    <path d="M112 36 A16 16 0 0 1 112 58" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M120 30 A24 24 0 0 1 120 64" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+    <!-- Card Number Dots & Label -->
+    <rect x="24" y="92" width="116" height="10" rx="5" fill="#e0f2fe" opacity="0.9"/>
+    <rect x="24" y="114" width="80" height="10" rx="5" fill="#bae6fd" opacity="0.75"/>
+    <rect x="24" y="146" width="116" height="28" rx="8" fill="#ffffff"/>
+    <text x="82" y="165" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="16" font-weight="900" fill="#0369a1" text-anchor="middle" letter-spacing="1">CARD / ATM</text>
   </g>
 </svg>

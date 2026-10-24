@@ -5,14 +5,28 @@
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'Inter', monospace;
+
+  /* Map legacy amber accent tokens to Royal Blue (Putih & Biru Mini ATM Theme) */
+  --color-amber-50: #eff6ff;
+  --color-amber-100: #dbeafe;
+  --color-amber-200: #bfdbfe;
+  --color-amber-300: #93c5fd;
+  --color-amber-400: #3b82f6;
+  --color-amber-500: #2563eb;
+  --color-amber-600: #1d4ed8;
+  --color-amber-700: #1e40af;
+  --color-amber-800: #1e3a8a;
+  --color-amber-900: #172554;
+  --color-amber-950: #0f172a;
 }
 
 @layer base {
   :root {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 16.5px;
+    font-size: 14.5px;
     letter-spacing: -0.011em;
-    color: #09090b;
+    color: #0f172a;
+    background-color: #f8fafc;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -21,13 +35,13 @@
 
   @media (min-width: 640px) {
     :root {
-      font-size: 17px;
+      font-size: 15px;
     }
   }
 
   @media (min-width: 1024px) {
     :root {
-      font-size: 17.5px;
+      font-size: 16px;
     }
   }
 
@@ -35,14 +49,16 @@
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
-    color: #09090b;
+    color: #0f172a;
+    background-color: #f8fafc;
     font-size: 1rem;
     line-height: 1.5;
   }
 
   .dark body,
   .dark {
-    color: #f4f4f5;
+    color: #f8fafc;
+    background-color: #0b1120;
   }
 
   /* High-contrast crisp text for form controls and touch targets */
@@ -51,19 +67,30 @@
   }
 
   input, select, textarea {
-    color: #09090b;
+    color: #0f172a;
   }
 
   .dark input,
   .dark select,
   .dark textarea {
-    color: #f4f4f5;
+    color: #f8fafc;
   }
 
-  /* Yellow / Amber buttons always have sharp bold black text */
+  /* Primary Royal Blue buttons always have sharp white text */
   .bg-amber-500,
-  .bg-amber-400 {
-    color: #09090b !important;
+  .bg-amber-400,
+  .bg-blue-600,
+  .bg-blue-500,
+  .bg-blue-700 {
+    color: #ffffff !important;
+  }
+
+  .bg-amber-500 svg,
+  .bg-amber-400 svg,
+  .bg-blue-600 svg,
+  .bg-blue-500 svg,
+  .bg-blue-700 svg {
+    color: #ffffff !important;
   }
 
   .font-mono,
@@ -71,23 +98,9 @@
     font-family: 'JetBrains Mono', 'Inter', monospace;
     font-feature-settings: 'tnum' on, 'zero' on;
   }
-
-  /* Increase readability of micro-labels and badges for cashiers */
-  .text-\[9px\] {
-    font-size: 11px !important;
-    line-height: 1.3 !important;
-  }
-  .text-\[10px\] {
-    font-size: 11.5px !important;
-    line-height: 1.35 !important;
-  }
-  .text-\[11px\] {
-    font-size: 12.5px !important;
-    line-height: 1.4 !important;
-  }
 }
 
-/* Minimalist High-Contrast Scrollbars */
+/* Minimalist High-Contrast Blue-Slate Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -98,28 +111,28 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(113, 113, 122, 0.3);
+  background: rgba(37, 99, 235, 0.25);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(113, 113, 122, 0.5);
+  background: rgba(37, 99, 235, 0.5);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(161, 161, 170, 0.2);
+  background: rgba(96, 165, 250, 0.25);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(245, 158, 11, 0.4);
+  background: rgba(59, 130, 246, 0.5);
 }
 
 /* Minimalist Clean Grid Background Pattern */
 .bg-grid-slate-pattern {
   background-size: 28px 28px;
   background-image: 
-    linear-gradient(to right, rgba(24, 24, 27, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(24, 24, 27, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgba(37, 99, 235, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(37, 99, 235, 0.04) 1px, transparent 1px);
 }
 
 .dark .bg-grid-slate-pattern {
@@ -129,8 +142,8 @@
     linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 }
 
-/* Anti-glare High Contrast Selection */
+/* Royal Blue Selection */
 ::selection {
-  background-color: #f59e0b;
-  color: #09090b;
+  background-color: #2563eb;
+  color: #ffffff;
 }
