@@ -317,6 +317,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
+        scrollX: 0,
+        scrollY: 0,
       });
 
       return new Promise((resolve) => {
@@ -518,45 +520,50 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   return (
     <div
       id="receipt-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-start justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
     >
       <div
         id="receipt-modal-card"
-        className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border my-8 flex flex-col ${
+        className={`w-full max-w-lg md:max-w-3xl rounded-2xl shadow-2xl overflow-hidden border my-auto max-h-[94vh] flex flex-col ${
           darkMode
             ? 'bg-slate-900 border-slate-800 text-slate-100'
-            : 'bg-white border-slate-200 text-slate-800'
+            : 'bg-white border-blue-200 text-slate-800'
         }`}
       >
-        {/* Header Notification Banner - Official Agent Theme */}
-        <div className="bg-zinc-950 px-6 py-4 text-white flex items-center justify-between border-b border-amber-500/30 shadow-md">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
-              <CheckCircle2 className="w-5 h-5 text-amber-400" />
+        {/* Header Notification Banner - Pinned at Top (Never Cut Off) */}
+        <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-3.5 text-white flex items-center justify-between border-b border-blue-500/40 shadow-md shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 text-white flex items-center justify-center font-bold shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-emerald-300" />
             </div>
-            <div>
-              <h3 className="font-black text-sm tracking-tight text-white flex items-center gap-2">
+            <div className="min-w-0">
+              <h3 className="font-black text-sm tracking-tight text-white flex items-center gap-2 truncate">
                 Transaksi Berhasil &amp; Tercatat
               </h3>
-              <p className="text-xs text-amber-400 font-mono font-bold">Faktur #{transaction.invoiceNumber} • {transaction.branchName || 'Kasir Agen'}</p>
+              <p className="text-xs text-blue-100 font-mono font-bold truncate">
+                Faktur #{transaction.invoiceNumber} • {transaction.branchName || 'Kasir Agen'}
+              </p>
             </div>
           </div>
           <button
             id="btn-close-receipt"
             onClick={onClose}
-            className="p-1.5 rounded-lg opacity-80 hover:opacity-100 hover:bg-white/10 transition-colors cursor-pointer text-zinc-300"
+            className="p-1.5 rounded-lg opacity-90 hover:opacity-100 hover:bg-white/15 transition-colors cursor-pointer text-white shrink-0"
+            title="Tutup Struk"
           >
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
-        {/* Printable Thermal Receipt Card */}
-        <div className="p-5 flex justify-center bg-slate-100 dark:bg-slate-950">
-          <div
-            ref={receiptRef}
-            id="thermal-receipt-paper"
-            className="bg-white text-slate-900 p-5 rounded-xl shadow-lg font-mono text-xs w-full max-w-[340px] border border-slate-200 select-all"
-          >
+        {/* Main Content Area: Side-by-Side on Desktop, Scrollable Stack on Mobile */}
+        <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+          {/* Left Column: Printable Thermal Receipt Card */}
+          <div className="p-4 sm:p-5 flex justify-center items-start bg-slate-100 dark:bg-slate-950 md:w-[375px] shrink-0 md:overflow-y-auto border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
+            <div
+              ref={receiptRef}
+              id="thermal-receipt-paper"
+              className="bg-white text-slate-900 p-4 sm:p-5 rounded-xl shadow-lg font-mono text-xs w-full max-w-[340px] border border-slate-200 select-all"
+            >
             {/* Store Header */}
             <div className="text-center pb-2 text-black">
               <div className="font-black text-sm tracking-tight text-black">{settings.storeName}</div>
@@ -756,8 +763,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-950/70 border-t border-slate-200 dark:border-slate-800 space-y-2.5">
+        {/* Right Column: Action Buttons */}
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-900/90 flex-1 md:overflow-y-auto flex flex-col justify-between space-y-2.5">
+          <div className="space-y-2.5">
           {/* Status Message Notification */}
           {printMessage && (
             <div
@@ -939,18 +947,20 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               onClose();
               onNewTransaction();
             }}
-            className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 tracking-wide cursor-pointer"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 tracking-wide cursor-pointer"
           >
-            <RefreshCw className="w-4 h-4 text-amber-400" />
+            <RefreshCw className="w-4 h-4 text-white" />
             <span>Selesai &amp; Transaksi Baru</span>
           </button>
+          </div>
+        </div>
         </div>
       </div>
 
       {/* WhatsApp Photo Instruction Modal */}
       {waPhotoModalData && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-2xl flex flex-col space-y-4">
+        <div className="fixed inset-0 z-60 flex items-start justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-2xl my-auto flex flex-col space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold">

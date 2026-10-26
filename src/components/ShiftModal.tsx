@@ -73,9 +73,9 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
   const cashDiff = actualCash - (currentShiftStats.expectedCash || 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-2 sm:p-4 bg-zinc-950/80 backdrop-blur-sm overflow-y-auto">
       <div
-        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border bg-zinc-900 border-zinc-800 text-zinc-100"
+        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border my-auto bg-zinc-900 border-zinc-800 text-zinc-100"
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-950 flex justify-between items-center">

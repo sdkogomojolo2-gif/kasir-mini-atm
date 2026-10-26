@@ -155,11 +155,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   return (
     <div
       id="checkout-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-start justify-center p-2 sm:p-4 bg-zinc-950/80 backdrop-blur-sm overflow-y-auto"
     >
       <div
         id="checkout-modal-card"
-        className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border my-6 bg-zinc-900 border-zinc-800 text-zinc-100"
+        className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border my-auto bg-zinc-900 border-zinc-800 text-zinc-100"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950">

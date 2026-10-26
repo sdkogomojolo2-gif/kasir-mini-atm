@@ -454,9 +454,9 @@ export const MiniATMTransactionModal: React.FC<MiniATMTransactionModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
       <div
-        className={`w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border my-6 flex flex-col ${
+        className={`w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border my-auto max-h-[94vh] flex flex-col ${
           darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-900'
         }`}
       >
